@@ -1,20 +1,16 @@
 #include <stdio.h>
 
-unsigned long long toBinary(unsigned long num10) {
-	int mult = 1;
-	unsigned long long num2 = 0;
-	while (num10) {
-		num2 += mult * (num10 & 1);
-		num10 >>= 1;
-		mult *= 10;
-	}
-	return num2;
-}
-
 int main(void) {
-	printf("Type a decimal number: ");
-	unsigned long num10;
-	scanf("%lu", &num10);
-	printf("%llu\n", toBinary(num10));
+	printf("Type an int: ");
+	int num10;
+	scanf("%d", &num10);
+	int cur, pivot = 1;
+	for (cur = 31; cur >= 0; --cur) {
+		if ((num10 & (1 << cur)) || (!cur))
+			pivot = 0;
+		if (!pivot)
+			printf("%d", !!(num10 & (1 << cur)));
+	}
+	printf("\n");
 	return 0;
 }
