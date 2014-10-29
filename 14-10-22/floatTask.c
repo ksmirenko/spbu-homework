@@ -6,9 +6,14 @@
 
 #include <stdio.h>
 
+const int MANTISSA_LENGTH = 23;
+const int EXPONENT_LENGTH = 8;
+const int DEBUG = 0;
+
 // prints bit representation of an int
+// for debugging purposes
 void printBits(int num10) {
-	int cur = 31, space = 0;
+	int cur = 0x1F, space = 0;
 	while (cur >= 0) {
 		if (!space) {
 			printf(" ");
@@ -21,7 +26,6 @@ void printBits(int num10) {
 }
 
 // prints detailed float number info
-// input: 
 void printFloat3(char sign, int mant, int exp) {
 	// checking exceptional cases
 	// zero	
@@ -30,12 +34,12 @@ void printFloat3(char sign, int mant, int exp) {
 		return;
 	}
 	// Inf
-	if (!mant && !(exp ^ 255)) {
+	if (!mant && !(exp ^ 0xFF)) {
 		printf("%cInf\n", sign);
 		return;
 	}
 	// NaN
-	if (mant && !(exp ^ 255)) {
+	if (mant && !(exp ^ 0xFF)) {
 		printf("NaN\n", sign);
 		return;
 	}
@@ -45,8 +49,8 @@ void printFloat3(char sign, int mant, int exp) {
 		return;
 	}
 
-	// printing mantissa
-	int i = 22;
+	// printing mantissa (binary)
+	/*int i = 22;
 	while (!(mant & 1) && i) {
 		mant >>= 1;
 		--i;
@@ -55,18 +59,23 @@ void printFloat3(char sign, int mant, int exp) {
 	while (i >= 0) {
 		printf("%d", !!(mant & (1 << i)));
 		--i;
+	}*/
+
+	// printing the whole number (decimal)
+	double fmant = 1.0 + 1.0 * mant / (1 << MANTISSA_LENGTH);
+	printf("%c%f * 2^%d\n", sign, fmant, exp - 0x7F);
+	if (DEBUG) {	
+		printBits(mant);
+		printBits(exp);
 	}
-	// printing exponent
-	printf(" * 2^%d\n", exp - 127);
-	printf("(the mantissa is represented as binary)\n");
 }
 
 // prints detailed float number info
 // input: bit representation of a float
 void printFloat(int ival) {
 	char sign = (ival & (1 << 0x1F)) ? '-' : '+';
-	int mant = ival & ((1 << 24) - 1);
-	int exp = ((ival >> 23) & 255);
+	int mant = ival & ((1 << MANTISSA_LENGTH) - 1);
+	int exp = ((ival >> MANTISSA_LENGTH) & 0xFF);
 	printFloat3(sign, mant, exp);
 }
 
@@ -107,10 +116,14 @@ int main(void) {
 	float fval;
 	printf("Type a float: ");
 	scanf("%f", &fval);
+	if (DEBUG) {
+		printBits(*(int*)((void*) & fval));
+	}
 	printf("Variant 1:\n");
 	variant1(fval);
 	printf("Variant 2:\n");
 	variant2(fval);
 	printf("Variant 3:\n");
-	variant3(fval);	
+	variant3(fval);
+	return 0;
 }
