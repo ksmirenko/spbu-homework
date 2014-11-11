@@ -40,12 +40,12 @@ void printFloat3(char sign, int mant, int exp) {
 	}
 	// NaN
 	if (mant && !(exp ^ 0xFF)) {
-		printf("NaN\n", sign);
+		printf("NaN\n");
 		return;
 	}
 	// Denormalized
 	if (mant && !exp) {
-		printf("Denormalized number\n", sign);
+		printf("Denormalized number\n");
 		return;
 	}
 

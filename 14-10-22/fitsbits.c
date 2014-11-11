@@ -1,3 +1,9 @@
+/*
+    Task: print 1 if X can 'fit' into N bits (two's complement)
+        or print 0, if otherwise.
+    Author: Kirill Smirenko, group 171
+*/
+
 #include <stdio.h>
 
 int fitsBits(int x, int n) {

@@ -1,3 +1,8 @@
+/*
+    Task: Convert an int from decimal to binary numeric system
+    Author: Kirill Smirenko, group 171
+*/
+
 #include <stdio.h>
 
 int main(void) {

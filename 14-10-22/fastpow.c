@@ -1,3 +1,8 @@
+/*
+    Task: count a^n using bitwise operations
+    Author: Kirill Smirenko, group 171
+*/
+
 #include <stdio.h>
 
 unsigned long pow2(unsigned long a, unsigned long k) {
