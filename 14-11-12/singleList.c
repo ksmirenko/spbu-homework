@@ -37,6 +37,11 @@ void list_removeByValue(int value) {
         return;
     }
     struct Item *cur = head->next, *prev = head;
+    if (head->val == value) {
+        head = head->next;
+        free(prev);
+        return;
+    }
     while (cur != NULL) {
         if (cur->val == value) {
             prev->next = cur->next;

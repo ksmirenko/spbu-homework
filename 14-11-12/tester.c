@@ -1,36 +1,43 @@
 /*
     Program for testing the singly linked list.
-    This file was created to 
     Author: Kirill Smirenko, group 171
 */
 
 #include <stdio.h>
 #include "singleList.h"
 
+const int DEBUG = 1;
+
 int main() {
-    int curCommand = 255, arg;
-    int hack = 0;
+    char curCommand = 0;
+    int arg;
     list_init();
-    while ((curCommand != 'q') && (hack < 5)) {
+    while (curCommand != 'q') {
         scanf("%c", &curCommand);
-        printf("Command: '%c'\n", curCommand);
         switch (curCommand) {
             case 'a':
                 scanf("%d", &arg);
+                if (DEBUG)
+                    printf("ADD %d\n", arg);
                 list_add(arg);
                 break;
             case 'p':
+                if (DEBUG)
+                    printf("PRINT\n");
                 list_print();
                 break;
             case 'r':
                 scanf("%d", &arg);
+                if (DEBUG)
+                    printf("REMOVE %d\n", arg);
                 list_removeByValue(arg);
                 break;
             default:
                 break;
         }
-        hack++;
     }
+    if (DEBUG)
+        printf("QUIT\n");
     list_init();
     return 0;
 }
