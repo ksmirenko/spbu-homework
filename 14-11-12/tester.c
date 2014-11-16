@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include "singleList.h"
 
-const int DEBUG = 1;
+const int DEBUG = 0;
 
 int main(int argc, char **argv) {
     // opening files, if needed
