@@ -24,7 +24,7 @@ IntNode* intNode_AbsDiff(IntNode **num1, IntNode **num2) {
             cur2 = cur2->next;
         }
         else {
-            val1 = 0;
+            val2 = 0;
         }
         if (val1 >= val2) {
             curDigit = val1 - val2;
@@ -34,7 +34,9 @@ IntNode* intNode_AbsDiff(IntNode **num1, IntNode **num2) {
             curDigit = (ARITHM_BASE + val1 - val2) % ARITHM_BASE;
             val1 = -1;
         }
-        intNode_Add(&result, curDigit % ARITHM_BASE);
+        if ((curDigit > 0) && (cur1 != NULL)) {
+            intNode_Add(&result, curDigit % ARITHM_BASE);
+        }        
         curDigit /= ARITHM_BASE;
     }
     return result;
