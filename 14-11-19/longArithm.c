@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "intNode.h"
 #include "longArithm.h"
 
@@ -7,7 +8,7 @@ const int ARITHM_BASE = 10;
 // creates a new IntNode that is equal to reverted value of abs({num1} - {num2})
 IntNode* intNode_AbsDiff(IntNode **num1, IntNode **num2) {
     // if num1 < num2, return (num2 - num1) instead
-    if (intNode_Less(num1, num2)) {
+    if (intNode_IsLess(num1, num2)) {
         return intNode_AbsDiff(num2, num1);
     }
 
@@ -43,7 +44,7 @@ IntNode* intNode_AbsDiff(IntNode **num1, IntNode **num2) {
 }
 
 // returns 1 if {num1} is less than {num2} and 0 otherwise
-int intNode_Less(IntNode **num1, IntNode **num2) {
+int intNode_IsLess(IntNode **num1, IntNode **num2) {
     IntNode *cur1 = *num1, *cur2 = *num2;
     int isFirstLess = 0, val1 = 0, val2 = 0;
     while ((cur1 != NULL) || (cur2 != NULL)) {
@@ -70,6 +71,16 @@ int intNode_Less(IntNode **num1, IntNode **num2) {
     return isFirstLess;
 }
 
+// prints {number} to stdio as decimal integer
+void longNumber_Print(LongNumber **number) {
+    if ((*number)->sign) {
+        printf("-");
+    }
+    IntNode *revDigits = intNode_Revert(&((*number)->digits));
+    intNode_PrintRev(&revDigits);
+    intNode_Dispose(&revDigits);
+}
+
 // creates a new IntNode that is equal to reverted value of ({num1} + {num2})
 IntNode* intNode_Sum(IntNode **num1, IntNode **num2) {
     IntNode *result = intNode_Init();
@@ -94,6 +105,24 @@ IntNode* intNode_Sum(IntNode **num1, IntNode **num2) {
 LongNumber* longNumber_Add(LongNumber **num1, LongNumber **num2) {
     // TODO: implement
     return NULL;
+}
+
+// releases memory held by {number}
+void longNumber_Dispose(LongNumber **number) {
+    intNode_Dispose(&((*number)->digits));
+    free(*number);
+}
+
+// creates an empty LongNumber
+LongNumber* longNumber_Init() {
+    LongNumber *temp = (LongNumber*)malloc(sizeof(LongNumber));
+    if (temp == NULL) {
+        printf("Error: out of memory!\n");
+        return NULL;
+    }
+    temp->sign = 0;
+    temp->digits = intNode_Init();
+    return temp;
 }
 
 // creates a new LongNumber that is equal to difference between {num1} and {num2}

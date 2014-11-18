@@ -20,14 +20,15 @@ void intNode_Add(IntNode **number, int digit) {
     *number = temp;
 }
 
-// sets {number} to NULL
+// releases memory held by {number}
 void intNode_Dispose(IntNode **number) {
     while (*number != NULL) {
         intNode_Pop(number);
     }
+    free(*number);
 }
 
-// initializes an empty IntNode
+// creates an empty IntNode
 IntNode* intNode_Init() {
     return NULL; // this function is only for incapsulation purposes
 }

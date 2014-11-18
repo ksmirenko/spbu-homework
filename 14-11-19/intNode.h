@@ -16,10 +16,10 @@ typedef struct IntNode {
 // writes {digit} to the end of {number} as the new least significant digit
 void intNode_Add(IntNode **number, int digit);
 
-// sets {number} to NULL
+// releases memory held by {number}
 void intNode_Dispose(IntNode **number);
 
-// initializes an empty IntNode
+// creates an empty IntNode
 IntNode* intNode_Init();
 
 // removes the least significant digit of {number}
