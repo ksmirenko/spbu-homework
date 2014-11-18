@@ -68,8 +68,12 @@ int main() {
 
     printf("Type the 1st number: ");
     LongNumber *num1 = scanParseLongNumber();
-    printf("You typed: ");
-    longNumber_Print(&num1);    
+    printf("Type the 2nd number: ");
+    LongNumber *num2 = scanParseLongNumber();
+
+    LongNumber *result = (LongNumber*)longNumber_Add(&num1, &num2);
+    printf("num1 + num2 == ");
+    longNumber_Print(&result);    
 
     // freeing memory
     longNumber_Dispose(&num1);

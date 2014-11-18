@@ -65,20 +65,8 @@ int intNode_IsLess(IntNode **num1, IntNode **num2) {
         if (val1 != val2) {
             isFirstLess = (val1 < val2);
         }
-        // TODO: remove
-//        printf("val1 == %d, val2 == %d, isFirstLess == %d\n", val1, val2, isFirstLess);
     }
     return isFirstLess;
-}
-
-// prints {number} to stdio as decimal integer
-void longNumber_Print(LongNumber **number) {
-    if ((*number)->sign) {
-        printf("-");
-    }
-    IntNode *revDigits = intNode_Revert(&((*number)->digits));
-    intNode_PrintRev(&revDigits);
-    intNode_Dispose(&revDigits);
 }
 
 // creates a new IntNode that is equal to reverted value of ({num1} + {num2})
@@ -101,16 +89,44 @@ IntNode* intNode_Sum(IntNode **num1, IntNode **num2) {
     return result;
 }
 
-// creates a new LongNumber that is equal to sum of {num1} and {num2}
+// prints {number} to stdio as decimal integer
+void longNumber_Print(LongNumber **number) {
+    if ((*number)->sign) {
+        printf("-");
+    }
+    IntNode *revDigits = intNode_Revert(&((*number)->digits));
+    intNode_PrintRev(&revDigits);
+    intNode_Dispose(&revDigits);
+}
+
+// creates a new LongNumber that is equal to sum of {num1} and {num2} (digits reverted)
 LongNumber* longNumber_Add(LongNumber **num1, LongNumber **num2) {
-    // TODO: implement
-    return NULL;
+    LongNumber *result = longNumber_Init();
+    if ((*num1)->sign == (*num2)->sign) {
+        result->sign = (*num1)->sign;
+        result->digits = intNode_Add(&((*num1)->digits), &((*num2)->digits));
+    }
+    else {
+        if (intNode_IsLess((*num1)->digits, (*num2)->digits)) {
+            result->sign = (*num2)->sign;
+        }
+        else {
+            result->sign = (*num1)->sign;
+        }
+        result->digits = intNode_AbsDiff(&((*num1)->digits), &((*num2)->digits));
+    }
+    return result;
 }
 
 // releases memory held by {number}
 void longNumber_Dispose(LongNumber **number) {
     intNode_Dispose(&((*number)->digits));
     free(*number);
+}
+
+// changes the sign of {num} to opposite
+void longNumber_DoNeg(LongNumber **num) {
+    (*num)->sign = !(*num)->sign;
 }
 
 // creates an empty LongNumber
@@ -125,13 +141,10 @@ LongNumber* longNumber_Init() {
     return temp;
 }
 
-// creates a new LongNumber that is equal to difference between {num1} and {num2}
+// creates a new LongNumber that is equal to difference between {num1} and {num2} (digits reverted)
 LongNumber* longNumber_Sub(LongNumber **num1, LongNumber **num2) {
-    // TODO: implement
-    return NULL;
-}
-
-// changes the sign of {num} to opposite
-void longNumber_DoNeg(LongNumber **num) {
-    // TODO: implement
+    longNumber_DoNeg(num2);
+    LongNumber *result = longNumber_Add(num1, num2);
+    longNumber_DoNeg(num2);
+    return result;
 }

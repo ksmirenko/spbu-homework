@@ -14,21 +14,21 @@ typedef struct IntNode {
 } IntNode;
 
 // writes {digit} to the end of {number} as the new least significant digit
-void intNode_Add(IntNode **number, int digit);
+void        intNode_Add(IntNode **number, int digit);
 
 // releases memory held by {number}
-void intNode_Dispose(IntNode **number);
+void        intNode_Dispose(IntNode **number);
 
 // creates an empty IntNode
-IntNode* intNode_Init();
+IntNode*    intNode_Init();
 
 // removes the least significant digit of {number}
-void intNode_Pop(IntNode **number);
+void        intNode_Pop(IntNode **number);
 
 // prints {revertedNumber} to stdio as decimal integer (NB: number must actually be reverted)
-void intNode_PrintRev(IntNode **revertedNumber);
+void        intNode_PrintRev(IntNode **revertedNumber);
 
 // creates new IntNode that is equal to {number} reverted as a list
-IntNode* intNode_Revert(IntNode **number);
+IntNode*    intNode_Revert(IntNode **number);
 
 #endif
