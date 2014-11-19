@@ -20,11 +20,16 @@ void intNode_Add(IntNode **number, int digit) {
     *number = temp;
 }
 
-// releases memory held by {number}
-void intNode_Dispose(IntNode **number) {
+// clears {number} to NULL state
+void intNode_Clear(IntNode **number) {
     while (*number != NULL) {
         intNode_Pop(number);
     }
+}
+
+// releases memory held by {number}
+void intNode_Dispose(IntNode **number) {
+    intNode_Clear(number);
     free(*number);
 }
 
@@ -52,12 +57,12 @@ void intNode_PrintRev(IntNode **revertedNumber) {
     printf("\n");
 }
 
-// creates new IntNode that is equal to {number} reverted as a list
-IntNode* intNode_Revert(IntNode **number) {
-    IntNode *revertedNumber = intNode_Init(), *cur = *number;
+// reverts {number} and writes it to {result}
+void intNode_Revert(IntNode **number, IntNode **result) {
+    intNode_Clear(result);
+    IntNode *cur = *number;
     while (cur != NULL) {
-        intNode_Add(&revertedNumber, cur->val);
+        intNode_Add(result, cur->val);
         cur = cur->next;    
     }
-    return revertedNumber;
 }

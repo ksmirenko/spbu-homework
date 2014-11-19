@@ -71,12 +71,15 @@ int main() {
     printf("Type the 2nd number: ");
     LongNumber *num2 = scanParseLongNumber();
 
-    LongNumber *result = (LongNumber*)longNumber_Add(&num1, &num2);
+    LongNumber *result = longNumber_Init();
+    longNumber_Add(&num1, &num2, &result);
     printf("num1 + num2 == ");
-    longNumber_Print(&result);    
+    longNumber_Print(&result);
 
     // freeing memory
     longNumber_Dispose(&num1);
+    longNumber_Dispose(&num2);
+    longNumber_Dispose(&result);
 
     return 0;
 }
