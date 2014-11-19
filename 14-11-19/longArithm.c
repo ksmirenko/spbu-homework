@@ -36,7 +36,7 @@ void intNode_AbsDiff(IntNode **num1, IntNode **num2, IntNode **result) {
             curDigit = (ARITHM_BASE + val1 - val2) % ARITHM_BASE;
             val1 = -1;
         }
-        if (curDigit > 0) {
+        if ((curDigit > 0) || (cur1 != NULL)) {
             intNode_Add(result, curDigit % ARITHM_BASE);
         }        
         curDigit /= ARITHM_BASE;

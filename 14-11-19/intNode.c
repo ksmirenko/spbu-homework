@@ -50,6 +50,10 @@ void intNode_Pop(IntNode **number) {
 // prints {revertedNumber} to stdio as decimal integer (NB: number must actually be reverted)
 void intNode_PrintRev(IntNode **revertedNumber) {
     IntNode *cur = *revertedNumber;
+    if (cur == NULL) {
+        printf("0");
+        return;
+    }
     while (cur != NULL) {
         printf("%d", cur->val);
         cur = cur->next;
