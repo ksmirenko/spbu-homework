@@ -43,6 +43,7 @@ LongNumber* scanParseLongNumber() {
 }
 
 int main() {
+    // testing operations with IntNode-s
     /*printf("Type the 1st number: ");
     IntNode *num1 = scanParseNumber();
     printf("Type the 2nd number: ");
@@ -51,13 +52,17 @@ int main() {
     int res = intNode_IsLess(&num1, &num2);
     printf("(num1 < num2) == %d\n", res);
 
-    IntNode *result = (IntNode*)intNode_Sum(&num1, &num2); // FIXME: warning
+    IntNode *result = intNode_Init();
+
+    intNode_Sum(&num1, &num2, &result);
     printf("num1 + num2 == ");
     intNode_PrintRev(&result);
-    result = (IntNode*)intNode_AbsDiff(&num1, &num2); // FIXME: warning
+
+    intNode_AbsDiff(&num1, &num2, &result);
     printf("num1 - num2 == ");
     intNode_PrintRev(&result);
-    result = (IntNode*)intNode_AbsDiff(&num2, &num1); // FIXME: warning
+
+    intNode_AbsDiff(&num2, &num1, &result);
     printf("num2 - num1 == ");
     intNode_PrintRev(&result);
 
@@ -66,15 +71,35 @@ int main() {
     intNode_Dispose(&num2);
     intNode_Dispose(&result);*/
 
+
+    // testing operations with LongNumber-s
     printf("Type the 1st number: ");
     LongNumber *num1 = scanParseLongNumber();
     printf("Type the 2nd number: ");
     LongNumber *num2 = scanParseLongNumber();
+    printf("Type the operation (+/-): ");
+    char op;    
+    scanf("%c", &op);
 
     LongNumber *result = longNumber_Init();
-    longNumber_Add(&num1, &num2, &result);
-    printf("num1 + num2 == ");
+    switch (op) {
+        case '+':
+            longNumber_Add(&num1, &num2, &result);
+            break;
+        case '-':
+            longNumber_Sub(&num1, &num2, &result);
+            break;
+        default:
+            printf("Error!\n");
+            return -1;
+    }
+
+    longNumber_Print(&num1);
+    printf(" %c ", op);
+    longNumber_Print(&num2);
+    printf(" == ");
     longNumber_Print(&result);
+    printf("\n");
 
     // freeing memory
     longNumber_Dispose(&num1);

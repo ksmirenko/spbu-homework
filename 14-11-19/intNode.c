@@ -54,7 +54,6 @@ void intNode_PrintRev(IntNode **revertedNumber) {
         printf("%d", cur->val);
         cur = cur->next;
     }
-    printf("\n");
 }
 
 // reverts {number} and writes it to {result}

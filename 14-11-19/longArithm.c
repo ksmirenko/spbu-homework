@@ -36,7 +36,7 @@ void intNode_AbsDiff(IntNode **num1, IntNode **num2, IntNode **result) {
             curDigit = (ARITHM_BASE + val1 - val2) % ARITHM_BASE;
             val1 = -1;
         }
-        if ((curDigit > 0) && (cur1 != NULL)) {
+        if (curDigit > 0) {
             intNode_Add(result, curDigit % ARITHM_BASE);
         }        
         curDigit /= ARITHM_BASE;
@@ -86,20 +86,14 @@ void intNode_Sum(IntNode **num1, IntNode **num2, IntNode **result) {
         intNode_Add(result, curSum % ARITHM_BASE);
         curSum /= ARITHM_BASE;
     }
-}
-
-// prints {number} to stdio as decimal integer
-void longNumber_Print(LongNumber **number) {
-    if ((*number)->sign) {
-        printf("-");
+    if (curSum) {
+        intNode_Add(result, curSum % ARITHM_BASE);
     }
-    IntNode *revDigits = intNode_Init();
-    intNode_Revert(&((*number)->digits), &revDigits);
-    intNode_PrintRev(&revDigits);
-    intNode_Dispose(&revDigits);
 }
 
-// writes the sum of {num1} and {num2} to {result} (digits reverted)
+// -----------------------------------------------------------------------------
+
+// writes the sum of {num1} and {num2} to {result}
 void longNumber_Add(LongNumber **num1, LongNumber **num2, LongNumber **result) {
     longNumber_Clear(result);
     if ((*num1)->sign == (*num2)->sign) {
@@ -115,6 +109,12 @@ void longNumber_Add(LongNumber **num1, LongNumber **num2, LongNumber **result) {
         }
         intNode_AbsDiff(&((*num1)->digits), &((*num2)->digits), &((*result)->digits));
     }
+
+    // reverting result->digits
+    IntNode *revDigits = intNode_Init(), *trash = (*result)->digits;
+    intNode_Revert(&((*result)->digits), &revDigits);
+    (*result)->digits = revDigits;
+    intNode_Dispose(&trash);
 }
 
 // clears {number} to initial state
@@ -146,7 +146,18 @@ LongNumber* longNumber_Init() {
     return temp;
 }
 
-// writes the difference between {num1} and {num2} to {result} (digits reverted)
+// prints {number} to stdio as decimal integer
+void longNumber_Print(LongNumber **number) {
+    if ((*number)->sign) {
+        printf("-");
+    }
+    IntNode *revDigits = intNode_Init();
+    intNode_Revert(&((*number)->digits), &revDigits);
+    intNode_PrintRev(&revDigits);
+    intNode_Dispose(&revDigits);
+}
+
+// writes the difference between {num1} and {num2} to {result}
 void longNumber_Sub(LongNumber **num1, LongNumber **num2, LongNumber **result) {
     longNumber_DoNeg(num2);
     longNumber_Add(num1, num2, result);

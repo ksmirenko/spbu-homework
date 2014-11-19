@@ -21,7 +21,7 @@ int         intNode_IsLess(IntNode **num1, IntNode **num2);
 // writes the reverted value of ({num1} + {num2}) to {result}
 void        intNode_Sum(IntNode **num1, IntNode **num2, IntNode **result);
 
-// writes the sum of {num1} and {num2} to {result} (digits reverted)
+// writes the sum of {num1} and {num2} to {result}
 void        longNumber_Add(LongNumber **num1, LongNumber **num2, LongNumber **result);
 
 // clears {number} to initial state
@@ -39,7 +39,7 @@ LongNumber* longNumber_Init();
 // prints {number} to stdio as decimal integer
 void        longNumber_Print(LongNumber **number);
 
-// writes the difference between {num1} and {num2} to {result} (digits reverted)
+// writes the difference between {num1} and {num2} to {result}
 void        longNumber_Sub(LongNumber **num1, LongNumber **num2, LongNumber **result);
 
 #endif
