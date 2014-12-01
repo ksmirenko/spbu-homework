@@ -9,6 +9,10 @@
 
 const int DEBUG = 0;
 
+void printInt(void *elem) {
+    printf("%d ", *(int*)(elem));
+}
+
 int main(int argc, char **argv) {
     // opening files, if needed
     FILE *fileIn = NULL, *fileOut = NULL;
@@ -34,7 +38,6 @@ int main(int argc, char **argv) {
 
     char curCommand = 0;
     int arg;
-    list_init();
     while (curCommand != 'q') {
         scanf("%c", &curCommand);
         if (DEBUG) {
@@ -47,7 +50,8 @@ int main(int argc, char **argv) {
                 sList_Add(list, (void*)(&arg));
                 break;
             case 'p':
-                sList_Print(list);
+                sList_Foreach(list, printInt);
+                printf("\n");
                 break;
             case 'r':
                 scanf("%d", &arg);
@@ -62,7 +66,7 @@ int main(int argc, char **argv) {
     }
 	
     // freeing memory
-    sList_Destroy(list);
+    sList_Dispose(list);
     if (DEBUG) {
         printf("List cleared.\n");
     }

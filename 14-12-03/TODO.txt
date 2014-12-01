@@ -1,6 +1,3 @@
-slist.c (finish)
-slist_tester.c // tester (a <int>, p, r <int>, q)
-TEST (SList & the task)
 longnum.h (change everything for using new SList)
 longnum.c (change everything for using new SList)
 longnum_tester.c // a +|- b

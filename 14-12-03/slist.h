@@ -6,6 +6,8 @@
 #ifndef SLIST_H
 #define SLIST_H
 
+#include <stdlib.h>
+
 // a common function that returns void and takes void*
 // such functions are used here to free list nodes
 typedef void (*FunctionVoidPvoid)(void*);
@@ -34,11 +36,11 @@ void	sList_Add(SList *list, void *newValue);
 // releases system resources held by {list}
 void	sList_Dispose(SList *list);
 
+// invokes {function} for each element of {list} (starting from head)
+void    sList_Foreach(SList *list, FunctionVoidPvoid function);
+
 // initializes and returns a new empty list of node size {nodeSize} which uses {freeFunction} to free nodes
 SList* sList_Init(int nodeSize, FunctionVoidPvoid freeFunction);
-
-// prints all SListNodes of {list} (starting from head, to stdio, divided by space)
-void	sList_Print(SList *list);
 
 // writes the value of the head node of {list} to {retValue} and then removes the head node
 void	sList_Remove(SList *list, void *retValue);
