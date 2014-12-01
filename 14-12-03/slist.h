@@ -34,8 +34,8 @@ void	sList_Add(SList *list, void *newValue);
 // releases system resources held by {list}
 void	sList_Dispose(SList *list);
 
-// initializes and returns a new empty list which uses {freeFunction} as a memory freeing function
-SList*	sList_Init(FunctionVoidPvoid freeFunction);
+// initializes and returns a new empty list of node size {nodeSize} which uses {freeFunction} to free nodes
+SList* sList_Init(int nodeSize, FunctionVoidPvoid freeFunction);
 
 // prints all SListNodes of {list} (starting from head, to stdio, divided by space)
 void	sList_Print(SList *list);
