@@ -34,10 +34,10 @@ void sList_Add(SList *list, void *newValue) {
     list->head = temp;
 }
 
-// releases system resources held by {list}
-void sList_Dispose(SList *list) {
-	// freeing nodes
-	SListNode *cur;
+// removes all nodes of {list}
+void sList_Clear(SList *list) {
+    assert(list != NULL);
+    SListNode *cur;
 	while (list->head != NULL) {
 		cur = list->head;
 		list->head = list->head->next;
@@ -45,10 +45,14 @@ void sList_Dispose(SList *list) {
 		if (list->freeFunc) {
 			list->freeFunc(cur->val);
 		}
-		//free(cur->val);
 		free(cur);
 	}
-	
+}
+
+// releases system resources held by {list}
+void sList_Dispose(SList *list) {
+	// freeing nodes
+	sList_Clear(list);
 	// freeing list
 	free(list);
 }
@@ -129,4 +133,16 @@ void sList_RemoveFirstOcc(SList *list, void *value) {
         prev = cur;
         cur = cur->next;
 	}
+}
+
+// writes the reverted {list} to {result}
+void sList_Revert(SList *list, SList *result) {
+    assert(list != NULL);
+    sList_Dispose(result);
+    result = sList_Init(list->nodeSize, list->freeFunc);
+    SListNode *cur = list->head;
+    while (cur != NULL) {
+        sList_Add(result, cur->val);
+        cur = cur->next;    
+    }
 }

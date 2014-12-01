@@ -33,6 +33,9 @@ typedef struct {
 // adds {newValue} to the head of {list}
 void	sList_Add(SList *list, void *newValue);
 
+// removes all nodes of {list}
+void    sList_Clear(SList *list);
+
 // releases system resources held by {list}
 void	sList_Dispose(SList *list);
 
@@ -47,5 +50,8 @@ void	sList_Remove(SList *list, void *retValue);
 
 // removes the first occurence of {value} in {list}
 void	sList_RemoveFirstOcc(SList *list, void *value);
+
+// writes the reverted {list} to {result}
+void    sList_Revert(SList *list, SList *result);
 
 #endif

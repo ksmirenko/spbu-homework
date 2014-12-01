@@ -1,6 +1,3 @@
-longnum.h (change everything for using new SList)
-longnum.c (change everything for using new SList)
-longnum_tester.c // a +|- b
 TEST (LongNum & the task)
 longnum.c (add mult and div)
 longnum_tester.c // a +|-|*|/ b
