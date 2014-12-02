@@ -10,14 +10,45 @@ void printDigit(void *elem) {
     printf("%d", *(int*)(elem));
 }
 
-// clears {number} to initial state (*digits == empty SList, *sign == 0)
+// clears {lnum} to initial state (*digits == empty SList, *sign == 0)
 void longNumber_Clear(LongNumber *lnum) {
 	assert(lnum != NULL);
     sList_Clear(lnum->digits);
     *lnum->sign = 0;
 }
 
-// returns 1 if {num1} is less than {num2} and 0 otherwise
+// deletes leading (most significant) zeroes in {digits}
+void longNumber_DigitsDeleteLeadingZeroes(SList *digits) {
+    assert(digits != NULL);
+    SListNode *curNode = digits->head->next;
+    int lastNonZeroIndex = 0, i = 1;
+    while (curNode != NULL) {
+        if (*(int*)curNode->val) {
+            lastNonZeroIndex = i;
+        }
+        ++i;
+        curNode = curNode->next;
+    }
+    curNode = digits->head->next;
+    SListNode *prevNode = digits->head;
+    i = 1;
+    while ((curNode != NULL) && (i <= lastNonZeroIndex)) {
+        ++i;
+        prevNode = curNode;
+        curNode = curNode->next;
+    }
+    while (curNode != NULL) {
+        prevNode->next = curNode->next;
+		// freeing curNode
+        if (digits->freeFunc) {
+			digits->freeFunc(curNode->val);
+		}
+		free(curNode);
+        curNode = prevNode->next;
+    }
+}
+
+// returns 1 if {digits1} is less than {digits2} and 0 otherwise
 int longNumber_DigitsIsLess(SList *digits1, SList *digits2) {
 	SListNode *cur1 = digits1->head, *cur2 = digits2->head;
     int isFirstLess = 0, val1 = 0, val2 = 0;
@@ -43,7 +74,7 @@ int longNumber_DigitsIsLess(SList *digits1, SList *digits2) {
     return isFirstLess;
 }
 
-// writes the reverted value of abs({num1} - {num2}) to {result}
+// writes the reverted value of abs({digits1} - {digits2}) to {result}
 void longNumber_DigitsSub(SList *digits1, SList *digits2, SList *result) {
 	// if num1 < num2, return (num2 - num1) instead
     if (longNumber_DigitsIsLess(digits1, digits2)) {
@@ -80,9 +111,20 @@ void longNumber_DigitsSub(SList *digits1, SList *digits2, SList *result) {
         }        
         curDigit /= LONG_NUMBER_BASE;
     }
+    // deleting leading zeroes (they are in the head for {result} is reverted)
+    SListNode *curHead = result->head;
+    while ((result->head->next != NULL) && !(*(int*)result->head->val)) {
+        curHead = result->head;
+        result->head = result->head->next;
+        // freeing curHead
+	    if(result->freeFunc) {
+		    result->freeFunc(curHead->val);
+	    }
+	    free(curHead);
+    }
 }
 
-// writes the reverted value of ({num1} + {num2}) to {result}
+// writes the reverted value of ({digits1} + {digits2}) to {result}
 void longNumber_DigitsSum(SList *digits1, SList *digits2, SList *result) {
 	sList_Clear(result);
     SListNode *cur1 = digits1->head, *cur2 = digits2->head;
@@ -106,12 +148,12 @@ void longNumber_DigitsSum(SList *digits1, SList *digits2, SList *result) {
     }
 }
 
-// changes the sign of {num} to opposite
+// changes the sign of {lnum} to opposite
 void longNumber_DoNeg(LongNumber *lnum) {
 	*lnum->sign = !(*lnum->sign);
 }
 
-// releases memory held by {number}
+// releases memory held by {lnum}
 void longNumber_Dispose(LongNumber *lnum) {
 	assert(lnum != NULL);
     sList_Dispose(lnum->digits);
@@ -138,7 +180,7 @@ LongNumber* longNumber_Init() {
     return temp;
 }
 
-// prints {number} to stdio as decimal integer
+// prints {lnum} to stdio as decimal integer
 void longNumber_Print(LongNumber *lnum) {
     if (*lnum->sign) {
         printf("-");
@@ -149,14 +191,14 @@ void longNumber_Print(LongNumber *lnum) {
     sList_Dispose(revDigits);
 }
 
-// writes the difference between {num1} and {num2} to {result}
+// writes the difference between {lnum1} and {lnum2} to {result}
 void longNumber_Sub(LongNumber *lnum1, LongNumber *lnum2, LongNumber *result) {
 	longNumber_DoNeg(lnum2);
     longNumber_Sum(lnum1, lnum2, result);
     longNumber_DoNeg(lnum2);
 }
 
-// writes the sum of {num1} and {num2} to {result}
+// writes the sum of {lnum1} and {lnum2} to {result}
 void longNumber_Sum(LongNumber *lnum1, LongNumber *lnum2, LongNumber *result) {
 	longNumber_Clear(result);
     if (*lnum1->sign == *lnum2->sign) {

@@ -16,34 +16,37 @@ typedef struct _LongNumber {
     int *sign; // 0 - positive, 1 - negative
 } LongNumber;
 
-// clears {number} to initial state (*digits == empty SList, *sign == 0)
+// clears {lnum} to initial state (*digits == empty SList, *sign == 0)
 void        longNumber_Clear(LongNumber *lnum);
 
-// returns 1 if {num1} is less than {num2} and 0 otherwise
+// deletes leading (most significant) zeroes in {digits}
+void        longNumber_DigitsDeleteLeadingZeroes(SList *digits);
+
+// returns 1 if {digits1} is less than {digits2} and 0 otherwise
 int         longNumber_DigitsIsLess(SList *digits1, SList *digits2);
 
-// writes the reverted value of abs({num1} - {num2}) to {result}
+// writes the reverted value of abs({digits1} - {digits2}) to {result}
 void        longNumber_DigitsSub(SList *digits1, SList *digits2, SList *result);
 
-// writes the reverted value of ({num1} + {num2}) to {result}
+// writes the reverted value of ({digits1} + {digits2}) to {result}
 void        longNumber_DigitsSum(SList *digits1, SList *digits2, SList *result);
 
-// changes the sign of {num} to opposite
+// changes the sign of {lnum} to opposite
 void        longNumber_DoNeg(LongNumber *lnum);
 
-// releases memory held by {number}
+// releases memory held by {lnum}
 void        longNumber_Dispose(LongNumber *lnum);
 
 // creates and returns an empty LongNumber
 LongNumber* longNumber_Init();
 
-// prints {number} to stdio as decimal integer
+// prints {lnum} to stdio as decimal integer
 void        longNumber_Print(LongNumber *lnum);
 
-// writes the difference between {num1} and {num2} to {result}
+// writes the difference between {lnum1} and {lnum2} to {result}
 void        longNumber_Sub(LongNumber *lnum1, LongNumber *lnum2, LongNumber *result);
 
-// writes the sum of {num1} and {num2} to {result}
+// writes the sum of {lnum1} and {lnum2} to {result}
 void        longNumber_Sum(LongNumber *lnum1, LongNumber *lnum2, LongNumber *result);
 
 #endif

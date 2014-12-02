@@ -43,7 +43,7 @@ void	sList_Dispose(SList *list);
 void    sList_Foreach(SList *list, FunctionVoidPvoid function);
 
 // initializes and returns a new empty list of node size {nodeSize} which uses {freeFunction} to free nodes
-SList* sList_Init(int nodeSize, FunctionVoidPvoid freeFunction);
+SList*  sList_Init(int nodeSize, FunctionVoidPvoid freeFunction);
 
 // writes the value of the head node of {list} to {retValue} and then removes the head node
 void	sList_Remove(SList *list, void *retValue);
