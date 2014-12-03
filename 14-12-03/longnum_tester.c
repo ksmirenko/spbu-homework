@@ -93,6 +93,9 @@ int main() {
         case '-':
             longNumber_Sub(num1, num2, result);
             break;
+        case '*':
+            longNumber_Mult(num1, num2, result);
+            break;
         default:
             printf("Error!\n");
             return -1;

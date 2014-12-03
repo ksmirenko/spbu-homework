@@ -36,6 +36,12 @@ void	sList_Add(SList *list, void *newValue);
 // removes all nodes of {list}
 void    sList_Clear(SList *list);
 
+// creates and returns deep copy of {listFrom}
+SList*  sList_Copy(SList *listFrom);
+
+// writes a deep copy of {listFrom} to {listTo}
+void    sList_CopyTo(SList *listFrom, SList *listTo);
+
 // releases system resources held by {list}
 void	sList_Dispose(SList *list);
 
@@ -51,7 +57,10 @@ void	sList_Remove(SList *list, void *retValue);
 // removes the first occurence of {value} in {list}
 void	sList_RemoveFirstOcc(SList *list, void *value);
 
+// reverts {list}
+void    sList_Revert(SList *list);
+
 // writes the reverted {list} to {result}
-void    sList_Revert(SList *list, SList *result);
+void    sList_RevertTo(SList *list, SList *result);
 
 #endif

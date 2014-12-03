@@ -74,6 +74,62 @@ int longNumber_DigitsIsLess(SList *digits1, SList *digits2) {
     return isFirstLess;
 }
 
+// writes the (not reverted) value of ({digits1} * {digits2}) to {result}
+void longNumber_DigitsMultLongLong(SList *digits1, SList *digits2, SList *result) {
+    assert(digits1 != NULL);
+    assert(digits2 != NULL);
+
+    sList_Clear(result);
+    int zero = 0;
+    sList_Add(result, (void*)&zero);
+    SList *localResult = sList_Init(digits1->nodeSize, digits1->freeFunc);
+    SList *temp = sList_Init(digits1->nodeSize, digits1->freeFunc);
+
+    SListNode *curNode2 = digits2->head;
+    int shift = 0, i;
+    while (curNode2 != NULL) {
+        longNumber_DigitsMultLongShort(digits1, *(int*)curNode2->val, localResult);
+            fprintf(stderr, "localResult: "); // TODO: remove
+            sList_Foreach(localResult, printDigit);
+            fprintf(stdout, "\n");
+        for (i = 0; i < shift; ++i) {
+            sList_Add(localResult, (void*)&zero);
+        }
+        sList_CopyTo(result, temp); 
+        longNumber_DigitsSum(temp, localResult, result);
+        sList_Revert(result);
+
+        ++shift;
+        curNode2 = curNode2->next;
+    }
+
+    sList_Dispose(localResult);
+    fprintf(stderr, "temp:\n\n\n"); // TODO: remove
+    sList_Foreach(temp, printDigit);
+    fprintf(stdout, "\n");
+    fprintf(stderr, "FLAG\n\n\n"); // TODO: remove
+    sList_Dispose(temp);
+    fprintf(stderr, "flag 2\n"); // TODO: remove
+}
+
+// writes the (not reverted) value of ({digits} * {num}) to {result}
+void longNumber_DigitsMultLongShort(SList *digits, int num, SList *result) {
+    sList_Clear(result);
+    int carry = 0, buf;
+    SListNode *curDigit = digits->head;
+    while (curDigit != NULL) {
+        carry += *(int*)curDigit->val * num;
+        buf = carry % LONG_NUMBER_BASE;
+        sList_Add(result, (void*)&buf);
+        carry /= LONG_NUMBER_BASE;
+        curDigit = curDigit->next;
+    }
+    if (carry) {
+        sList_Add(result, (void*)&carry);
+    }
+    sList_Revert(result);
+}
+
 // writes the reverted value of abs({digits1} - {digits2}) to {result}
 void longNumber_DigitsSub(SList *digits1, SList *digits2, SList *result) {
 	// if num1 < num2, return (num2 - num1) instead
@@ -180,13 +236,20 @@ LongNumber* longNumber_Init() {
     return temp;
 }
 
+// writes the product of {lnum1} and {lnum2} to {result}
+void longNumber_Mult(LongNumber *lnum1, LongNumber *lnum2, LongNumber *result) {
+    longNumber_Clear(result);
+    *result->sign = *lnum1->sign ^ *lnum2->sign;
+    longNumber_DigitsMultLongLong(lnum1->digits, lnum2->digits, result->digits);
+}
+
 // prints {lnum} to stdio as decimal integer
 void longNumber_Print(LongNumber *lnum) {
     if (*lnum->sign) {
         printf("-");
     }
     SList *revDigits = sList_Init(lnum->digits->nodeSize, lnum->digits->freeFunc);
-    sList_Revert(lnum->digits, revDigits);
+    sList_RevertTo(lnum->digits, revDigits);
     sList_Foreach(revDigits, printDigit);
     sList_Dispose(revDigits);
 }
@@ -215,10 +278,5 @@ void longNumber_Sum(LongNumber *lnum1, LongNumber *lnum2, LongNumber *result) {
         longNumber_DigitsSub(lnum1->digits, lnum2->digits, result->digits);
     }
 
-    // reverting result->digits
-    SList *revDigits = sList_Init(result->digits->nodeSize, result->digits->freeFunc);
-    SList *trash = result->digits;
-    sList_Revert(result->digits, revDigits);
-    result->digits = revDigits;
-    sList_Dispose(trash);
+    sList_Revert(result->digits);
 }

@@ -46,13 +46,42 @@ void sList_Clear(SList *list) {
 			list->freeFunc(cur->val);
 		}
 		free(cur);
+        fprintf(stderr, "freed one\n");
 	}
+}
+
+// creates and returns deep copy of {listFrom}
+SList* sList_Copy(SList *listFrom) {
+    assert(listFrom != NULL);
+    SList *listTo = sList_Init(listFrom->nodeSize, listFrom->freeFunc);
+    SListNode *curNode = listFrom->head;
+    while (curNode != NULL) {
+        sList_Add(listTo, curNode->val);
+        curNode = curNode->next;
+    }
+    return listTo;
+}
+
+// writes a deep copy of {listFrom} to {listTo}
+void  sList_CopyTo(SList *listFrom, SList *listTo) {
+    assert(listFrom != NULL);
+    sList_Dispose(listTo);
+    listTo = sList_Init(listFrom->nodeSize, listFrom->freeFunc);
+    SListNode *curNode = listFrom->head;
+    while (curNode != NULL) {
+        sList_Add(listTo, curNode->val);
+        curNode = curNode->next;
+    }
 }
 
 // releases system resources held by {list}
 void sList_Dispose(SList *list) {
+    if (list == NULL) {
+        return;
+    }
 	// freeing nodes
 	sList_Clear(list);
+    fprintf(stderr, "CLEANED\n");
 	// freeing list
 	free(list);
 }
@@ -135,8 +164,17 @@ void sList_RemoveFirstOcc(SList *list, void *value) {
 	}
 }
 
+// reverts {list}
+void sList_Revert(SList *list) {
+    SList *revDigits = sList_Init(list->nodeSize, list->freeFunc);
+    SList *trash = list;
+    sList_RevertTo(list, revDigits);
+    list = revDigits;
+    sList_Dispose(trash);
+}
+
 // writes the reverted {list} to {result}
-void sList_Revert(SList *list, SList *result) {
+void sList_RevertTo(SList *list, SList *result) {
     assert(list != NULL);
     sList_Dispose(result);
     result = sList_Init(list->nodeSize, list->freeFunc);
