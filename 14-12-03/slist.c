@@ -59,6 +59,7 @@ SList* sList_Copy(SList *listFrom) {
         sList_Add(listTo, curNode->val);
         curNode = curNode->next;
     }
+    sList_Revert(listTo);
     return listTo;
 }
 
@@ -72,6 +73,7 @@ void  sList_CopyTo(SList *listFrom, SList *listTo) {
         sList_Add(listTo, curNode->val);
         curNode = curNode->next;
     }
+    sList_Revert(listTo);
 }
 
 // releases system resources held by {list}
