@@ -89,27 +89,21 @@ void longNumber_DigitsMultLongLong(SList *digits1, SList *digits2, SList *result
     int shift = 0, i;
     while (curNode2 != NULL) {
         longNumber_DigitsMultLongShort(digits1, *(int*)curNode2->val, localResult);
-            fprintf(stderr, "localResult: "); // TODO: remove
             sList_Foreach(localResult, printDigit);
-            fprintf(stdout, "\n");
         for (i = 0; i < shift; ++i) {
             sList_Add(localResult, (void*)&zero);
         }
-        sList_CopyTo(result, temp); 
+        sList_CopyTo(result, &temp); 
         longNumber_DigitsSum(temp, localResult, result);
-        sList_Revert(result);
+        sList_Revert(&result);
 
         ++shift;
         curNode2 = curNode2->next;
     }
 
     sList_Dispose(localResult);
-    fprintf(stderr, "temp:\n\n\n"); // TODO: remove
     sList_Foreach(temp, printDigit);
-    fprintf(stdout, "\n");
-    fprintf(stderr, "FLAG\n\n\n"); // TODO: remove
     sList_Dispose(temp);
-    fprintf(stderr, "flag 2\n"); // TODO: remove
 }
 
 // writes the (not reverted) value of ({digits} * {num}) to {result}
@@ -127,7 +121,7 @@ void longNumber_DigitsMultLongShort(SList *digits, int num, SList *result) {
     if (carry) {
         sList_Add(result, (void*)&carry);
     }
-    sList_Revert(result);
+    sList_Revert(&result);
 }
 
 // writes the reverted value of abs({digits1} - {digits2}) to {result}
@@ -278,5 +272,5 @@ void longNumber_Sum(LongNumber *lnum1, LongNumber *lnum2, LongNumber *result) {
         longNumber_DigitsSub(lnum1->digits, lnum2->digits, result->digits);
     }
 
-    sList_Revert(result->digits);
+    sList_Revert(&result->digits);
 }

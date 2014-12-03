@@ -7,9 +7,8 @@ void printDigit1(void *elem) {
     printf("%d", *(int*)(elem));
 }
 
-// reads a number until new line and writes it to a newly created singly linked list
-SList* scanParseNumber() {
-    SList *number = sList_Init(sizeof(int), NULL);
+// reads a number until new line and writes it to {number}
+void scanParseNumber(SList *number) {
     char cur;
     scanf("%c", &cur);
     while (cur != '\n') {
@@ -21,7 +20,6 @@ SList* scanParseNumber() {
         sList_Add(number, (void*)&digit);
         scanf("%c", &cur);
     }
-    return number;
 }
 
 // reads a number until line break, writes it to a newly created LongNumber and returns the least
@@ -50,56 +48,91 @@ LongNumber* scanParseLongNumber() {
     return number;
 }
 
-int main() {
-    // testing operations with IntNode-s
-    /*printf("Type the 1st number: ");
-    IntNode *num1 = scanParseNumber();
-    printf("Type the 2nd number: ");
-    IntNode *num2 = scanParseNumber();
+void debugProc1() {
+    SList *orig = sList_Init(sizeof(int), NULL);
 
-    int res = sList_IsLess(&num1, &num2);
-    printf("(num1 < num2) == %d\n", res);
+/*    int temp = 2;*/
+/*    sList_Add(orig, (void*)&temp);*/
 
-    IntNode *result = sList_Init();
+    printf("--------------------Print a number: ");
+    scanParseNumber(orig);
 
-    sList_Sum(&num1, &num2, &result);
-    printf("num1 + num2 == ");
-    sList_PrintRev(&result);
+    printf("--------------------orig: {");
+    sList_Foreach(orig, printDigit1);
+    printf("}\n");
 
-    sList_AbsDiff(&num1, &num2, &result);
-    printf("num1 - num2 == ");
-    sList_PrintRev(&result);
+    SList *copy = sList_Init(sizeof(int), NULL);
 
-    sList_AbsDiff(&num2, &num1, &result);
-    printf("num2 - num1 == ");
-    sList_PrintRev(&result);
+    printf("--------------------Copying...\n");
+    sList_CopyTo(orig, &copy);
+    printf("--------------------Copied.\n");
 
-    // freeing memory
-    sList_Dispose(&num1);
-    sList_Dispose(&num2);
-    sList_Dispose(&result);*/
+    printf("--------------------orig: {");
+    sList_Foreach(orig, printDigit1);
+    printf("}\n");
+    printf("--------------------copy: {");
+    sList_Foreach(copy, printDigit1);
+    printf("}\n");
 
+/*    sList_Clear(orig);*/
+/*    sList_Clear(copy);*/
+/*    printf("--------------------Cleared.\n");*/
 
-    // testing operations with LongNumber-s
-    printf("Type the 1st number: ");
-    LongNumber *num1 = scanParseLongNumber();
+/*    printf("--------------------orig: {");*/
+/*    sList_Foreach(orig, printDigit1);*/
+/*    printf("}\n");*/
+
+    sList_Dispose(orig);
+    sList_Dispose(copy);
+    printf("--------------------Disposed.\n");
+}
+
+void debugProc2() {
+    int temp;
+    printf("--------------------Print a number: ");
+    SList *orig = sList_Init(sizeof(int), NULL);
+    scanParseNumber(orig);
+    SList *copy = sList_Init(sizeof(int), NULL);
+
+    temp = 5;
+    sList_Add(copy, (void*)&temp);
+    printf("--------------------orig: {");
+    sList_Foreach(orig, printDigit1);
+    printf("}\n");
+    printf("--------------------copy: {");
+    sList_Foreach(copy, printDigit1);
+    printf("}\n");
     
-    printf("DEBUG SECTION:\nnum1_copy: ");
-    SList *num1_copy = sList_Init(num1->digits->nodeSize, NULL);
-    sList_CopyTo(num1->digits, num1_copy);
-    sList_Foreach(num1_copy, printDigit1);
-    printf("\nnum1_copy: ");
-    sList_Foreach(num1_copy, printDigit1);
-    int temp = 7;
-/*    sList_Add(num1->digits, (void*)&temp);*/
-/*    sList_Add(num1->digits, (void*)&temp);*/
-/*    sList_Add(num1->digits, (void*)&temp);*/
-    printf("\nAdded 777 to num1.\nnum1: ");
-    sList_Foreach(num1->digits, printDigit1);
-    printf("\nnum1_copy: ");
-    sList_Foreach(num1_copy, printDigit1);
-    printf("\n");
 
+    printf("--------------------Copied.\n");
+    sList_CopyTo(orig, &copy);
+
+    printf("--------------------orig: {");
+    sList_Foreach(orig, printDigit1);
+    printf("}\n");
+    printf("--------------------copy: {");
+    sList_Foreach(copy, printDigit1);
+    printf("}\n");
+
+    printf("--------------------Adding {777} to orig.\n");
+    temp = 7;
+    sList_Add(orig, (void*)&temp);
+    sList_Add(orig, (void*)&temp);
+    sList_Add(orig, (void*)&temp);
+
+    printf("--------------------orig: {");
+    sList_Foreach(orig, printDigit1);
+    printf("}\n");
+    printf("--------------------copy: {");
+    sList_Foreach(copy, printDigit1);
+    printf("}\n");
+}
+
+int main() {
+    debugProc1();
+    return 0;
+/*    printf("Type the 1st number: ");*/
+/*    LongNumber *num1 = scanParseLongNumber();*/
 /*    printf("Type the 2nd number: ");*/
 /*    LongNumber *num2 = scanParseLongNumber();*/
 /*    printf("Type the operation (+/-): ");*/
@@ -130,7 +163,7 @@ int main() {
 /*    printf("\n");*/
 
     // freeing memory
-    longNumber_Dispose(num1);
+/*    longNumber_Dispose(num1);*/
 /*    longNumber_Dispose(num2);*/
 /*    longNumber_Dispose(result);*/
 
