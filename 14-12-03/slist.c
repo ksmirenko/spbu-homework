@@ -53,12 +53,7 @@ void sList_Clear(SList *list) {
 // writes a deep copy of {listFrom} to {listTo}
 void sList_CopyTo(SList *listFrom, SList **listTo) {
     assert(listFrom != NULL);
-    sList_Clear(*listTo);
-    SListNode *curNode = listFrom->head;
-    while (curNode != NULL) {
-        sList_Add(*listTo, curNode->val);
-        curNode = curNode->next;
-    }
+    sList_RevertTo(listFrom, *listTo);
     sList_Revert(listTo);
 }
 

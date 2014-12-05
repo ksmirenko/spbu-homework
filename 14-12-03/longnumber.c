@@ -89,7 +89,6 @@ void longNumber_DigitsMultLongLong(SList *digits1, SList *digits2, SList **resul
     int shift = 0, i;
     while (curNode2 != NULL) {
         longNumber_DigitsMultLongShort(digits1, *(int*)curNode2->val, &localResult);
-//        sList_Foreach(localResult, printDigit);
         for (i = 0; i < shift; ++i) {
             sList_Add(localResult, (void*)&zero);
         }
@@ -102,7 +101,6 @@ void longNumber_DigitsMultLongLong(SList *digits1, SList *digits2, SList **resul
     }
 
     sList_Dispose(localResult);
-//    sList_Foreach(temp, printDigit);
     sList_Dispose(temp);
 }
 
@@ -198,6 +196,36 @@ void longNumber_DigitsSum(SList *digits1, SList *digits2, SList *result) {
     }
 }
 
+// writes the result of integer division {lnum1} / {lnum2} to {result}
+void longNumber_Div(LongNumber *lnum1, LongNumber *lnum2, LongNumber *result) {
+    // TODO: implement
+    sList_Clear(result->digits);
+    if (longNumber_DigitsIsLess(lnum1->digits, lnum2->digits)) { // QUE: -2 / 5 == 0 or -2 / 5 == -1 ???
+        *result->sign = 0;
+        int zero = 0;
+        sList_Add(result->digits, (void*)&zero);
+        return;
+    }
+    *result->sign = *lnum1->sign ^ *lnum2->sign;
+    SList *divisibleReverted = sList_Init(lnum1->digits->nodeSize, lnum1->digits->freeFunc);
+    sList_RevertTo(lnum1->digits, divisibleReverted);
+    SList *buf = sList_Init(divisibleReverted->nodeSize, divisibleReverted->freeFunc);
+    SListNode *curNode = divisibleReverted->head;
+    int subCount = 0;
+    while (curNode != NULL) {
+        while ((buf->head == NULL) || (longNumber_DigitsIsLess(buf, lnum2->digits))) {
+            sList_Add(buf, curNode->val);
+            curNode = curNode->next;
+        }
+        while (!longNumber_DigitsIsLess(buf, lnum2->digits)) {
+            // QUE: how do I make this orthodoxial? There are too many memory operations
+        }
+    }
+    //      while can subtract
+    //          subtract
+    //      add subtract count to result as digit
+}
+
 // changes the sign of {lnum} to opposite
 void longNumber_DoNeg(LongNumber *lnum) {
 	*lnum->sign = !(*lnum->sign);
@@ -271,6 +299,5 @@ void longNumber_Sum(LongNumber *lnum1, LongNumber *lnum2, LongNumber *result) {
         }
         longNumber_DigitsSub(lnum1->digits, lnum2->digits, result->digits);
     }
-
     sList_Revert(&result->digits);
 }
