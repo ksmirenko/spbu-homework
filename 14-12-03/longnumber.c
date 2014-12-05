@@ -75,13 +75,13 @@ int longNumber_DigitsIsLess(SList *digits1, SList *digits2) {
 }
 
 // writes the (not reverted) value of ({digits1} * {digits2}) to {result}
-void longNumber_DigitsMultLongLong(SList *digits1, SList *digits2, SList *result) {
+void longNumber_DigitsMultLongLong(SList *digits1, SList *digits2, SList **result) {
     assert(digits1 != NULL);
     assert(digits2 != NULL);
 
-    sList_Clear(result);
+    sList_Clear(*result);
     int zero = 0;
-    sList_Add(result, (void*)&zero);
+    sList_Add(*result, (void*)&zero);
     SList *localResult = sList_Init(digits1->nodeSize, digits1->freeFunc);
     SList *temp = sList_Init(digits1->nodeSize, digits1->freeFunc);
 
@@ -89,20 +89,20 @@ void longNumber_DigitsMultLongLong(SList *digits1, SList *digits2, SList *result
     int shift = 0, i;
     while (curNode2 != NULL) {
         longNumber_DigitsMultLongShort(digits1, *(int*)curNode2->val, &localResult);
-        sList_Foreach(localResult, printDigit);
+//        sList_Foreach(localResult, printDigit);
         for (i = 0; i < shift; ++i) {
             sList_Add(localResult, (void*)&zero);
         }
-        sList_CopyTo(result, &temp); 
-        longNumber_DigitsSum(temp, localResult, result);
-        sList_Revert(&result);
+        sList_CopyTo(*result, &temp); 
+        longNumber_DigitsSum(temp, localResult, *result);
+        sList_Revert(result);
 
         ++shift;
         curNode2 = curNode2->next;
     }
 
     sList_Dispose(localResult);
-    sList_Foreach(temp, printDigit);
+//    sList_Foreach(temp, printDigit);
     sList_Dispose(temp);
 }
 
@@ -234,7 +234,7 @@ LongNumber* longNumber_Init() {
 void longNumber_Mult(LongNumber *lnum1, LongNumber *lnum2, LongNumber *result) {
     longNumber_Clear(result);
     *result->sign = *lnum1->sign ^ *lnum2->sign;
-    longNumber_DigitsMultLongLong(lnum1->digits, lnum2->digits, result->digits);
+    longNumber_DigitsMultLongLong(lnum1->digits, lnum2->digits, &result->digits);
 }
 
 // prints {lnum} to stdio as decimal integer

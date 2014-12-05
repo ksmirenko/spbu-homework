@@ -109,13 +109,11 @@ void debugProc2() {
 }
 
 int main() {
-    debugProc2();
-    return 0;
     printf("Type the 1st number: ");
     LongNumber *num1 = scanParseLongNumber();
     printf("Type the 2nd number: ");
     LongNumber *num2 = scanParseLongNumber();
-    printf("Type the operation (+/-): ");
+    printf("Type the operation (+,-,*): ");
     char op;    
     scanf("%c", &op);
 

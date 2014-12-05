@@ -26,7 +26,7 @@ void        longNumber_DigitsDeleteLeadingZeroes(SList *digits);
 int         longNumber_DigitsIsLess(SList *digits1, SList *digits2);
 
 // writes the (not reverted) value of ({digits1} * {digits2}) to {result}
-void        longNumber_DigitsMultLongLong(SList *digits1, SList *digits2, SList *result);
+void        longNumber_DigitsMultLongLong(SList *digits1, SList *digits2, SList **result);
 
 // writes the (not reverted) value of ({digits} * {num}) to {result}
 void        longNumber_DigitsMultLongShort(SList *digits, int num, SList **result);
