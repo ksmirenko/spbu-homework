@@ -88,8 +88,8 @@ void longNumber_DigitsMultLongLong(SList *digits1, SList *digits2, SList *result
     SListNode *curNode2 = digits2->head;
     int shift = 0, i;
     while (curNode2 != NULL) {
-        longNumber_DigitsMultLongShort(digits1, *(int*)curNode2->val, localResult);
-            sList_Foreach(localResult, printDigit);
+        longNumber_DigitsMultLongShort(digits1, *(int*)curNode2->val, &localResult);
+        sList_Foreach(localResult, printDigit);
         for (i = 0; i < shift; ++i) {
             sList_Add(localResult, (void*)&zero);
         }
@@ -107,21 +107,21 @@ void longNumber_DigitsMultLongLong(SList *digits1, SList *digits2, SList *result
 }
 
 // writes the (not reverted) value of ({digits} * {num}) to {result}
-void longNumber_DigitsMultLongShort(SList *digits, int num, SList *result) {
-    sList_Clear(result);
+void longNumber_DigitsMultLongShort(SList *digits, int num, SList **result) {
+    sList_Clear(*result);
     int carry = 0, buf;
     SListNode *curDigit = digits->head;
     while (curDigit != NULL) {
         carry += *(int*)curDigit->val * num;
         buf = carry % LONG_NUMBER_BASE;
-        sList_Add(result, (void*)&buf);
+        sList_Add(*result, (void*)&buf);
         carry /= LONG_NUMBER_BASE;
         curDigit = curDigit->next;
     }
     if (carry) {
-        sList_Add(result, (void*)&carry);
+        sList_Add(*result, (void*)&carry);
     }
-    sList_Revert(&result);
+    sList_Revert(result);
 }
 
 // writes the reverted value of abs({digits1} - {digits2}) to {result}

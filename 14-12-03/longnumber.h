@@ -29,7 +29,7 @@ int         longNumber_DigitsIsLess(SList *digits1, SList *digits2);
 void        longNumber_DigitsMultLongLong(SList *digits1, SList *digits2, SList *result);
 
 // writes the (not reverted) value of ({digits} * {num}) to {result}
-void        longNumber_DigitsMultLongShort(SList *digits, int num, SList *result);
+void        longNumber_DigitsMultLongShort(SList *digits, int num, SList **result);
 
 // writes the reverted value of abs({digits1} - {digits2}) to {result}
 void        longNumber_DigitsSub(SList *digits1, SList *digits2, SList *result);

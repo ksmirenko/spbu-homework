@@ -92,80 +92,60 @@ void debugProc2() {
     printf("--------------------Print a number: ");
     SList *orig = sList_Init(sizeof(int), NULL);
     scanParseNumber(orig);
-    SList *copy = sList_Init(sizeof(int), NULL);
+    SList *result = sList_Init(sizeof(int), NULL);
 
     temp = 5;
-    sList_Add(copy, (void*)&temp);
-    printf("--------------------orig: {");
-    sList_Foreach(orig, printDigit1);
-    printf("}\n");
-    printf("--------------------copy: {");
-    sList_Foreach(copy, printDigit1);
-    printf("}\n");
+    longNumber_DigitsMultLongShort(orig, temp, &result);
     
 
-    printf("--------------------Copied.\n");
-    sList_CopyTo(orig, &copy);
+    printf("--------------------Calculated.\n");
 
-    printf("--------------------orig: {");
-    sList_Foreach(orig, printDigit1);
-    printf("}\n");
-    printf("--------------------copy: {");
-    sList_Foreach(copy, printDigit1);
+    printf("--------------------Result: {");
+    sList_Foreach(result, printDigit1);
     printf("}\n");
 
-    printf("--------------------Adding {777} to orig.\n");
-    temp = 7;
-    sList_Add(orig, (void*)&temp);
-    sList_Add(orig, (void*)&temp);
-    sList_Add(orig, (void*)&temp);
-
-    printf("--------------------orig: {");
-    sList_Foreach(orig, printDigit1);
-    printf("}\n");
-    printf("--------------------copy: {");
-    sList_Foreach(copy, printDigit1);
-    printf("}\n");
+    sList_Dispose(orig);
+    sList_Dispose(result);
 }
 
 int main() {
-    debugProc1();
+    debugProc2();
     return 0;
-/*    printf("Type the 1st number: ");*/
-/*    LongNumber *num1 = scanParseLongNumber();*/
-/*    printf("Type the 2nd number: ");*/
-/*    LongNumber *num2 = scanParseLongNumber();*/
-/*    printf("Type the operation (+/-): ");*/
-/*    char op;    */
-/*    scanf("%c", &op);*/
+    printf("Type the 1st number: ");
+    LongNumber *num1 = scanParseLongNumber();
+    printf("Type the 2nd number: ");
+    LongNumber *num2 = scanParseLongNumber();
+    printf("Type the operation (+/-): ");
+    char op;    
+    scanf("%c", &op);
 
-/*    LongNumber *result = longNumber_Init();*/
-/*    switch (op) {*/
-/*        case '+':*/
-/*            longNumber_Sum(num1, num2, result);*/
-/*            break;*/
-/*        case '-':*/
-/*            longNumber_Sub(num1, num2, result);*/
-/*            break;*/
-/*        case '*':*/
-/*            longNumber_Mult(num1, num2, result);*/
-/*            break;*/
-/*        default:*/
-/*            printf("Error!\n");*/
-/*            return -1;*/
-/*    }*/
+    LongNumber *result = longNumber_Init();
+    switch (op) {
+        case '+':
+            longNumber_Sum(num1, num2, result);
+            break;
+        case '-':
+            longNumber_Sub(num1, num2, result);
+            break;
+        case '*':
+            longNumber_Mult(num1, num2, result);
+            break;
+        default:
+            printf("Error!\n");
+            return -1;
+    }
 
-/*    longNumber_Print(num1);*/
-/*    printf(" %c ", op);*/
-/*    longNumber_Print(num2);*/
-/*    printf(" == ");*/
-/*    longNumber_Print(result);*/
-/*    printf("\n");*/
+    longNumber_Print(num1);
+    printf(" %c ", op);
+    longNumber_Print(num2);
+    printf(" == ");
+    longNumber_Print(result);
+    printf("\n");
 
     // freeing memory
-/*    longNumber_Dispose(num1);*/
-/*    longNumber_Dispose(num2);*/
-/*    longNumber_Dispose(result);*/
+    longNumber_Dispose(num1);
+    longNumber_Dispose(num2);
+    longNumber_Dispose(result);
 
     return 0;
 }
