@@ -39,6 +39,7 @@ LongNumber* scanParseLongNumber() {
     while (cur != '\n') {
         if ((cur < '0') || (cur > '9')) {
             fprintf(stderr, "Critical I/O error!\n");
+            longNumber_Dispose(number);
         }
         assert((cur >= '0') && (cur <= '9'));
         int digit = (int)cur - '0';
@@ -113,7 +114,7 @@ int main() {
     LongNumber *num1 = scanParseLongNumber();
     printf("Type the 2nd number: ");
     LongNumber *num2 = scanParseLongNumber();
-    printf("Type the operation (+,-,*): ");
+    printf("Type the operation (+,-,*,/): ");
     char op;    
     scanf("%c", &op);
 
@@ -128,8 +129,15 @@ int main() {
         case '*':
             longNumber_Mult(num1, num2, result);
             break;
+        case '/':
+            longNumber_Div(num1, num2, result);
+            break;
         default:
-            printf("Error!\n");
+            printf("I/O error\n");
+            // freeing memory
+            longNumber_Dispose(num1);
+            longNumber_Dispose(num2);
+            longNumber_Dispose(result);
             return -1;
     }
 

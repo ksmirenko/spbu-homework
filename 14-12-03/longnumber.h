@@ -37,6 +37,9 @@ void        longNumber_DigitsSub(SList *digits1, SList *digits2, SList *result);
 // writes the reverted value of ({digits1} + {digits2}) to {result}
 void        longNumber_DigitsSum(SList *digits1, SList *digits2, SList *result);
 
+// writes the result of integer division {lnum1} / {lnum2} to {result}
+void        longNumber_Div(LongNumber *lnum1, LongNumber *lnum2, LongNumber *result);
+
 // changes the sign of {lnum} to opposite
 void        longNumber_DoNeg(LongNumber *lnum);
 

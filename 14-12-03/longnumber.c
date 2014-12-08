@@ -159,6 +159,11 @@ void longNumber_DigitsSub(SList *digits1, SList *digits2, SList *result) {
         }        
         curDigit /= LONG_NUMBER_BASE;
     }
+    // if result is NULL, then it equals to zero; writing 0
+    if (result->head == NULL) {
+        int temp = 0;
+        sList_Add(result, (void*)&temp);
+    }
     // deleting leading zeroes (they are in the head for {result} is reverted)
     SListNode *curHead = result->head;
     while ((result->head->next != NULL) && !(*(int*)result->head->val)) {
@@ -198,32 +203,104 @@ void longNumber_DigitsSum(SList *digits1, SList *digits2, SList *result) {
 
 // writes the result of integer division {lnum1} / {lnum2} to {result}
 void longNumber_Div(LongNumber *lnum1, LongNumber *lnum2, LongNumber *result) {
-    // TODO: implement
+    assert(lnum1 != NULL);
+    assert(lnum2 != NULL);
     sList_Clear(result->digits);
-    if (longNumber_DigitsIsLess(lnum1->digits, lnum2->digits)) { // QUE: -2 / 5 == 0 or -2 / 5 == -1 ???
+    // checking division by zero
+    if ((lnum2->digits != NULL)
+    && (*(int*)lnum2->digits->head == 0)
+    && (lnum2->digits->head->next == NULL)) {
         *result->sign = 0;
         int zero = 0;
         sList_Add(result->digits, (void*)&zero);
         return;
     }
+    // QUE: -2 / 5 == 0 or -2 / 5 == -1 ???
+    if (longNumber_DigitsIsLess(lnum1->digits, lnum2->digits)) {
+        *result->sign = 0;
+        int zero = 0;
+        sList_Add(result->digits, (void*)&zero);
+        return;
+    }
+    // QUE: what is the result of division by negative or by a bigger number? now it's done in a lazy way
     *result->sign = *lnum1->sign ^ *lnum2->sign;
+    
+    // initializing temp vars
     SList *divisibleReverted = sList_Init(lnum1->digits->nodeSize, lnum1->digits->freeFunc);
-    sList_RevertTo(lnum1->digits, divisibleReverted);
     SList *buf = sList_Init(divisibleReverted->nodeSize, divisibleReverted->freeFunc);
+    SList *temp = sList_Init(divisibleReverted->nodeSize, divisibleReverted->freeFunc);
+
+    sList_RevertTo(lnum1->digits, divisibleReverted);
+    // TODO: remove debug output
+    printf("--------------------divisibleReverted: {");
+    sList_Foreach(divisibleReverted, printDigit);
+    printf("}\n");
+
     SListNode *curNode = divisibleReverted->head;
-    int subCount = 0;
+    int subCount;
     while (curNode != NULL) {
+        // TODO: remove debug output
+        printf("--------------------buf: {");
+        sList_Foreach(buf, printDigit);
+        printf("}\n");
+        printf("--------------------temp: {");
+        sList_Foreach(temp, printDigit);
+        printf("}\n");
+        printf("--------------------result->digits: {");
+        sList_Foreach(result->digits, printDigit);
+        printf("}\n");
+
         while ((buf->head == NULL) || (longNumber_DigitsIsLess(buf, lnum2->digits))) {
             sList_Add(buf, curNode->val);
             curNode = curNode->next;
+            // TODO: remove debug output
+            printf("--------------------Added digit to buf.\n");
         }
+        printf("--------------------Before subtracting:\n"); // TODO: remove
+        printf("--------------------buf: {");
+        sList_Foreach(buf, printDigit);
+        printf("}\n");
+        printf("--------------------lnum2->digits: {");
+        sList_Foreach(lnum2->digits, printDigit);
+        printf("}\n");
+
+        subCount = 0;
         while (!longNumber_DigitsIsLess(buf, lnum2->digits)) {
             // QUE: how do I make this orthodoxial? There are too many memory operations
+            printf("flag 1_0\n"); // TODO: remove
+            sList_CopyTo(buf, &temp);
+
+            printf("--------------------temp (after copying): {");
+            sList_Foreach(temp, printDigit);
+            printf("}\n");
+
+            printf("flag 1_1\n"); // TODO: remove
+            longNumber_DigitsSub(temp, lnum2->digits, buf);
+            printf("flag 1_2\n"); // TODO: remove
+            subCount++;
+
+            printf("--------------------Subtracted.\n");
+            printf("--------------------buf: {");
+            sList_Foreach(buf, printDigit);
+            printf("}\n");
         }
+
+        printf("--------------------After subtracting:\n"); // TODO: remove
+        printf("--------------------buf: {");
+        sList_Foreach(buf, printDigit);
+        printf("}\n");
+        printf("--------------------lnum2->digits: {");
+        sList_Foreach(lnum2->digits, printDigit);
+        printf("}\n");
+
+        sList_Add(result->digits, (void*)&subCount);
+//        curNode = curNode->next;
     }
-    //      while can subtract
-    //          subtract
-    //      add subtract count to result as digit
+
+    // freeing memory
+    sList_Dispose(temp);
+    sList_Dispose(buf);
+    sList_Dispose(divisibleReverted);
 }
 
 // changes the sign of {lnum} to opposite
