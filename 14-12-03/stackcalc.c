@@ -7,63 +7,72 @@
 #include "stack.h"
 #include "longnumber.h"
 
+#define OPER_TYPE_SUM 0
+#define OPER_TYPE_SUB 1
+#define OPER_TYPE_MUL 2
+#define OPER_TYPE_DIV 3
+
 const int IS_INTERFACE_ENABLED = 1;
 const int ARITHM_BASE = 10;
 const char MAX_DIGIT_CHAR = '9';
 
-int doSum(Stack *stack) {
+Stack *stack;
+LongNumber *curNumber;
+LongNumber *buf1, *buf2, *buf3;
+
+int doOperation(int opType) {
     if (*stack->size < 2) {
+        fprintf(stderr, "CRITICAL: stack size less than 2\n"); // TODO: remove
         return -1;
     }
-    int numLast, numPreLast;
-    stack_Pop(stack, (void*)&numLast);
-    stack_Pop(stack, (void*)&numPreLast);
-    int result = numPreLast + numLast;
-    stack_Push(stack, (void*)&result);
+    longNumber_Clear(buf1);
+    longNumber_Clear(buf2);
+    longNumber_Clear(buf3);
+    stack_Pop(stack, (void*)&buf2);
+    stack_Pop(stack, (void*)&buf1);
+    switch (opType) {
+        case OPER_TYPE_SUM:
+            longNumber_Sum(buf1, buf2, buf3);
+            break;
+        case OPER_TYPE_SUB:
+            fprintf(stderr, "SUB...\n"); // TODO: remove
+            longNumber_Print(buf1);
+            printf("\n");
+            longNumber_Print(buf2);
+            printf("\n");
+            longNumber_Sub(buf1, buf2, buf3);
+            break;
+        case OPER_TYPE_MUL:
+            longNumber_Mult(buf1, buf2, buf3);
+            break;
+        case OPER_TYPE_DIV:
+            // checking division by zero
+            if ((buf2->digits != NULL)
+            && (*(int*)buf2->digits->head == 0)
+            && (buf2->digits->head->next == NULL)) {
+                return -2;
+            }
+            longNumber_Div(buf1, buf2, buf3);
+            break;
+        default:
+            return -3;
+    }
+    stack_Push(stack, (void*)&buf3);
     return 0;
 }
 
-int doNeg(Stack *stack) {
-    if (*stack->size < 2) {
-        return -1;
-    }
-    int numLast, numPreLast;
-    stack_Pop(stack, (void*)&numLast);
-    stack_Pop(stack, (void*)&numPreLast);
-    int result = numPreLast - numLast;
-    stack_Push(stack, (void*)&result);
-    return 0;
-}
-
-int doMult(Stack *stack) {
-    if (*stack->size < 2) {
-        return -1;
-    }
-    int numLast, numPreLast;
-    stack_Pop(stack, (void*)&numLast);
-    stack_Pop(stack, (void*)&numPreLast);
-    int result = numPreLast * numLast;
-    stack_Push(stack, (void*)&result);
-    return 0;
-}
-
-int doDiv(Stack *stack) {
-    if (*stack->size < 2) {
-        return -1;
-    }
-    int numLast, numPreLast;
-    stack_Pop(stack, (void*)&numLast);
-    if (numLast == 0) {
-        return -2;
-    }
-    stack_Pop(stack, (void*)&numPreLast);
-    int result = numPreLast / numLast;
-    stack_Push(stack, (void*)&result);
-    return 0;
+void memFree() {
+    longNumber_Dispose(buf1);
+    longNumber_Dispose(buf2);
+    longNumber_Dispose(buf3);
+    longNumber_Dispose(curNumber);
+    stack_Dispose(stack);
 }
 
 int main() {
-    Stack *stack = stack_Init(sizeof(LongNumber), longNumber_DisposeDelegate);
+    stack = stack_Init(sizeof(LongNumber), longNumber_DisposeDelegate);
+    curNumber = longNumber_Init();
+    buf3 = longNumber_Init();
 
     if (IS_INTERFACE_ENABLED) {
         printf("Welcome to the Great Stack Calculator!\n");
@@ -73,7 +82,6 @@ int main() {
     }
 
     int isReadingNumber = 0;
-    LongNumber *curNumber = longNumber_Init();
     char c;
     scanf("%c", &c);
     // main loop
@@ -82,6 +90,9 @@ int main() {
         if ((c >= '0') && (c <= MAX_DIGIT_CHAR)) {
             longNumber_DigitAdd(curNumber, c - '0');
             isReadingNumber = 1;
+            printf("Added digit %d. curNumber: {", c - '0'); // TODO: remove
+            longNumber_Print(curNumber);
+            printf("}\n");
         }
 
         // subtraction or beginning of a negative int
@@ -89,7 +100,7 @@ int main() {
             if (isReadingNumber) {
                 fprintf(stderr, "Error: incorrect input format; aborting...\n");
                 fprintf(stderr, "(\tgot symbol '%c' while reading a number)", c);
-                stack_Dispose(stack);
+                memFree();
            		return -1;
             }
             scanf("%c", &c);
@@ -99,18 +110,18 @@ int main() {
                 isReadingNumber = 1;
             }
             else if ((c == ' ') || (c == '\n')) { // subtraction
-                int errorCode = doNeg(stack);
+                int errorCode = doOperation(OPER_TYPE_SUB);
                 if (!errorCode) {
                     fprintf(stderr,
-                        "Error: invalid input commands (subtraction crashed); aborting...\n");
-                    stack_Dispose(stack);
+                        "Error: invalid input commands (subtraction crashed: %d); aborting...\n", errorCode);
+                    memFree();
            		    return -1;
                 }
             }
             else { // something erroneous
                 fprintf(stderr, "Error: incorrect input format; aborting...\n");
                 fprintf(stderr, "(\tgot symbol '%c' after '-')", c);
-                stack_Dispose(stack);
+                memFree();
            		return -1;
             }
         }
@@ -120,13 +131,13 @@ int main() {
             if (isReadingNumber) {
                 fprintf(stderr, "Error: incorrect input format; aborting...\n");
                 fprintf(stderr, "(\tgot symbol '%c' while reading a number)", c);
-                stack_Dispose(stack);
+                memFree();
            		return -1;
             }
-            int errorCode = doSum(stack);
+            int errorCode = doOperation(OPER_TYPE_SUM);
             if (errorCode) {
                 fprintf(stderr, "Error: invalid input commands (addition crashed); aborting...\n");
-                stack_Dispose(stack);
+                memFree();
            		return -1;
             }
         }
@@ -136,13 +147,13 @@ int main() {
             if (isReadingNumber) {
                 fprintf(stderr, "Error: incorrect input format; aborting...\n");
                 fprintf(stderr, "(\tgot symbol '%c' while reading a number)", c);
-                stack_Dispose(stack);
+                memFree();
            		return -1;
             }
-            int errorCode = doMult(stack);
+            int errorCode = doOperation(OPER_TYPE_MUL);
             if (errorCode) {
                 fprintf(stderr, "Error: invalid input commands (multiplication crashed); aborting...\n");
-                stack_Dispose(stack);
+                memFree();
            		return -1;
             }
         }
@@ -152,13 +163,13 @@ int main() {
             if (isReadingNumber) {
                 fprintf(stderr, "Error: incorrect input format; aborting...\n");
                 fprintf(stderr, "(\tgot symbol '%c' while reading a number)", c);
-                stack_Dispose(stack);
+                memFree();
            		return -1;
             }
-            int errorCode = doDiv(stack);
+            int errorCode = doOperation(OPER_TYPE_DIV);
             if (errorCode) {
                 fprintf(stderr, "Error: invalid input commands (division crashed); aborting...\n");
-                stack_Dispose(stack);
+                memFree();
            		return -1;
             }
         }
@@ -167,15 +178,23 @@ int main() {
         else if ((c == ' ') || (c == '\n') || (c == '\r')) {
             if (isReadingNumber) {
                 isReadingNumber = 0;
+                printf("Pushing {"); // TODO: remove
+                longNumber_Print(curNumber);
+                printf("}\n");
                 stack_Push(stack, (void*)&curNumber);
-                curNumber = 0;
+                longNumber_Clear(curNumber); // TODO: remove
+                stack_Top(stack, (void*)&curNumber);
+                printf("Stack top: {"); // TODO: remove
+                longNumber_Print(curNumber);
+                printf("}\n");
+                longNumber_Clear(curNumber);
             }
         }
 
         // something erroneous
         else {
             fprintf(stderr, "Error: incorrect symbol '%c'; aborting...\n", c);
-            stack_Dispose(stack);
+            memFree();
             return -1;
         }
 
@@ -192,5 +211,6 @@ int main() {
         fprintf(stderr, "Error: invalid input commands.\n");
     }
 
-    stack_Dispose(stack);
+    memFree();
+    return 0;
 }

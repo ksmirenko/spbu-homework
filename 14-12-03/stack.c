@@ -56,6 +56,7 @@ Stack* stack_Init(int nodeSize, FunctionVoidPvoid freeFunction) {
 
 // writes the value of the top element of {stack} to {retValue} and then removes the top element
 void stack_Pop(Stack *stack, void *retValue) {
+    stack_Top(stack, retValue);
     if (stack->size > 0) {
         sList_Remove(stack->list, retValue);
         --*stack->size;

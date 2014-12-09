@@ -1,7 +1,7 @@
 CC = gcc
 
-calc: stackcalc_short.c longnumber.c stack.c slist.c
-	$(CC) -o launch stackcalc_short.c longnumber.c stack.c slist.c
+calc: stackcalc.c longnumber.c stack.c slist.c
+	$(CC) -o launch stackcalc.c longnumber.c stack.c slist.c
 
 calc_s: stackcalc_short.c stack.c slist.c
 	$(CC) -o launch stackcalc_short.c stack.c slist.c
