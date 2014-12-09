@@ -17,6 +17,13 @@ void longNumber_Clear(LongNumber *lnum) {
     *lnum->sign = 0;
 }
 
+// adds {digit} to {lnum} as a new least significant digit
+void longNumber_DigitAdd(LongNumber *lnum, int digit) {
+    assert(lnum != NULL);
+    int buf = digit;
+    sList_Add(lnum->digits, (void*)&buf);
+}
+
 // deletes leading (most significant) zeroes in {digits}
 void longNumber_DigitsDeleteLeadingZeroes(SList *digits) {
     assert(digits != NULL);
@@ -299,6 +306,12 @@ void longNumber_Dispose(LongNumber *lnum) {
     sList_Dispose(lnum->digits);
     free(lnum->sign);
     free(lnum);
+}
+
+// a delegate that is passed to SList as a FreeFunction
+void longNumber_DisposeDelegate(void *lnum) {
+    assert(lnum != NULL);
+    longNumber_Dispose((LongNumber*)lnum);
 }
 
 // creates and returns an empty LongNumber

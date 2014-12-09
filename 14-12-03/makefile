@@ -1,6 +1,9 @@
 CC = gcc
 
-calc: stackcalc_short.c stack.c slist.c
+calc: stackcalc_short.c longnumber.c stack.c slist.c
+	$(CC) -o launch stackcalc_short.c longnumber.c stack.c slist.c
+
+calc_s: stackcalc_short.c stack.c slist.c
 	$(CC) -o launch stackcalc_short.c stack.c slist.c
 
 longnum: longnum_tester.c longnumber.c slist.c

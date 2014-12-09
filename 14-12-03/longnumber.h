@@ -19,6 +19,9 @@ typedef struct _LongNumber {
 // clears {lnum} to initial state (*digits == empty SList, *sign == 0)
 void        longNumber_Clear(LongNumber *lnum);
 
+// adds {digit} to {lnum} as a new least significant digit
+void        longNumber_DigitAdd(LongNumber *lnum, int digit);
+
 // deletes leading (most significant) zeroes in {digits}
 void        longNumber_DigitsDeleteLeadingZeroes(SList *digits);
 
@@ -45,6 +48,9 @@ void        longNumber_DoNeg(LongNumber *lnum);
 
 // releases memory held by {lnum}
 void        longNumber_Dispose(LongNumber *lnum);
+
+// a delegate that is passed to SList as a FreeFunction
+void        longNumber_DisposeDelegate(void *lnum);
 
 // creates and returns an empty LongNumber
 LongNumber* longNumber_Init();
