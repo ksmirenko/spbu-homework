@@ -16,6 +16,9 @@ typedef struct _LongNumber {
     int *sign; // 0 - positive, 1 - negative
 } LongNumber;
 
+// a delegate that is passed to SList as a CopyFunction
+void        longNumber_CloneDelegate(void *memTo, void *memFrom);
+
 // clears {lnum} to initial state (*digits == empty SList, *sign == 0)
 void        longNumber_Clear(LongNumber *lnum);
 
@@ -43,14 +46,14 @@ void        longNumber_DigitsSum(SList *digits1, SList *digits2, SList *result);
 // writes the result of integer division {lnum1} / {lnum2} to {result}
 void        longNumber_Div(LongNumber *lnum1, LongNumber *lnum2, LongNumber *result);
 
-// changes the sign of {lnum} to opposite
-void        longNumber_DoNeg(LongNumber *lnum);
-
 // releases memory held by {lnum}
 void        longNumber_Dispose(LongNumber *lnum);
 
 // a delegate that is passed to SList as a FreeFunction
 void        longNumber_DisposeDelegate(void *lnum);
+
+// changes the sign of {lnum} to opposite
+void        longNumber_DoNeg(LongNumber *lnum);
 
 // creates and returns an empty LongNumber
 LongNumber* longNumber_Init();

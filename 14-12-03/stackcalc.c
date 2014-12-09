@@ -55,7 +55,7 @@ int doOperation(int opType) {
         default:
             return -3;
     }
-    stack_Push(stack, (void*)&buf3);
+    stack_Push(stack, (void*)&buf3, longNumber_CloneDelegate);
     return 0;
 }
 
@@ -174,10 +174,8 @@ int main() {
         else if ((c == ' ') || (c == '\n') || (c == '\r')) {
             if (isReadingNumber) {
                 isReadingNumber = 0;
-                printf("Pushing {"); // TODO: remove
-                longNumber_Print(curNumber);
-                printf("}\n");
-                stack_Push(stack, (void*)&curNumber);
+                
+                stack_Push(stack, (void*)&curNumber, longNumber_CloneDelegate);
                 
                 // debug section TODO remove
                 LongNumber *temp = longNumber_Init();
@@ -188,6 +186,14 @@ int main() {
                 longNumber_Dispose(temp);
                 
                 longNumber_Clear(curNumber);
+                
+                // debug section TODO remove
+                temp = longNumber_Init();
+                stack_Top(stack, (void*)&temp);
+                printf("Stack top after clearing curNumber: {");
+                longNumber_Print(temp);
+                printf("}\n");
+                longNumber_Dispose(temp);
             }
         }
 
@@ -200,7 +206,7 @@ int main() {
 
         scanf("%c", &c);
     }
-
+    
     if (*stack->size == 1) {
         // printing the answer
         stack_Pop(stack, (void*)&curNumber);

@@ -1,13 +1,41 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "slist.h"
 #include "longnumber.h"
 
 const int LONG_NUMBER_BASE = 10; // base of the used numeric system
 
+// a private delegate that is passed to sList_Foreach; prints one digit to stdout
 void printDigit(void *elem) {
     printf("%d", *(int*)(elem));
+}
+
+// a delegate that is passed to SList as a CopyFunction
+void longNumber_CloneDelegate(void *memTo, void *memFrom) {
+    LongNumber *lnumFrom = *(LongNumber**)memFrom;
+    LongNumber *lnumTo = (LongNumber*)memTo;
+    
+    assert(lnumTo != NULL);
+    printf("-------------------OK 0\n");
+    lnumTo->digits = sList_Init(sizeof(int), NULL);
+    printf("-------------------OK 1\n");
+    lnumTo->sign = malloc(sizeof(int));
+    printf("-------------------OK 1.5\n");
+    if (lnumTo->sign == NULL) {
+        fprintf(stderr, "Error: not enough memory to create an int!\n");
+    }
+	assert(lnumTo->sign != NULL);
+    
+    printf("-------------------OK 2\n");
+    *lnumTo->sign = *lnumFrom->sign;
+    printf("-------------------OK 3\n");
+    sList_CopyTo(lnumFrom->digits, &lnumTo->digits); // QUE: will it work?
+    
+    printf("Copied to number: {");
+    longNumber_Print(lnumTo);
+    printf("}\n");
 }
 
 // clears {lnum} to initial state (*digits == empty SList, *sign == 0)
@@ -21,7 +49,7 @@ void longNumber_Clear(LongNumber *lnum) {
 void longNumber_DigitAdd(LongNumber *lnum, int digit) {
     assert(lnum != NULL);
     int buf = digit;
-    sList_Add(lnum->digits, (void*)&buf);
+    sList_Add(lnum->digits, (void*)&buf, NULL);
 }
 
 // deletes leading (most significant) zeroes in {digits}
@@ -88,7 +116,7 @@ void longNumber_DigitsMultLongLong(SList *digits1, SList *digits2, SList **resul
 
     sList_Clear(*result);
     int zero = 0;
-    sList_Add(*result, (void*)&zero);
+    sList_Add(*result, (void*)&zero, NULL);
     SList *localResult = sList_Init(digits1->nodeSize, digits1->freeFunc);
     SList *temp = sList_Init(digits1->nodeSize, digits1->freeFunc);
 
@@ -97,7 +125,7 @@ void longNumber_DigitsMultLongLong(SList *digits1, SList *digits2, SList **resul
     while (curNode2 != NULL) {
         longNumber_DigitsMultLongShort(digits1, *(int*)curNode2->val, &localResult);
         for (i = 0; i < shift; ++i) {
-            sList_Add(localResult, (void*)&zero);
+            sList_Add(localResult, (void*)&zero, NULL);
         }
         sList_CopyTo(*result, &temp); 
         longNumber_DigitsSum(temp, localResult, *result);
@@ -119,12 +147,12 @@ void longNumber_DigitsMultLongShort(SList *digits, int num, SList **result) {
     while (curDigit != NULL) {
         carry += *(int*)curDigit->val * num;
         buf = carry % LONG_NUMBER_BASE;
-        sList_Add(*result, (void*)&buf);
+        sList_Add(*result, (void*)&buf, NULL);
         carry /= LONG_NUMBER_BASE;
         curDigit = curDigit->next;
     }
     if (carry) {
-        sList_Add(*result, (void*)&carry);
+        sList_Add(*result, (void*)&carry, NULL);
     }
     sList_Revert(result);
 }
@@ -162,14 +190,14 @@ void longNumber_DigitsSub(SList *digits1, SList *digits2, SList *result) {
         }
         if ((curDigit > 0) || (cur1 != NULL)) {
             int temp = curDigit % LONG_NUMBER_BASE;
-            sList_Add(result, (void*)&temp);
+            sList_Add(result, (void*)&temp, NULL);
         }        
         curDigit /= LONG_NUMBER_BASE;
     }
     // if result is NULL, then it equals to zero; writing 0
     if (result->head == NULL) {
         int temp = 0;
-        sList_Add(result, (void*)&temp);
+        sList_Add(result, (void*)&temp, NULL);
     }
     // deleting leading zeroes (they are in the head for {result} is reverted)
     SListNode *curHead = result->head;
@@ -199,12 +227,12 @@ void longNumber_DigitsSum(SList *digits1, SList *digits2, SList *result) {
             cur2 = cur2->next;
         }
         temp = curSum % LONG_NUMBER_BASE;
-        sList_Add(result, (void*)&temp);
+        sList_Add(result, (void*)&temp, NULL);
         curSum /= LONG_NUMBER_BASE;
     }
     if (curSum) {
         temp = curSum % LONG_NUMBER_BASE;
-        sList_Add(result, (void*)&temp);
+        sList_Add(result, (void*)&temp, NULL);
     }
 }
 
@@ -219,14 +247,14 @@ void longNumber_Div(LongNumber *lnum1, LongNumber *lnum2, LongNumber *result) {
     && (lnum2->digits->head->next == NULL)) {
         *result->sign = 0;
         int zero = 0;
-        sList_Add(result->digits, (void*)&zero);
+        sList_Add(result->digits, (void*)&zero, NULL);
         return;
     }
     // QUE: -2 / 5 == 0 or -2 / 5 == -1 ???
     if (longNumber_DigitsIsLess(lnum1->digits, lnum2->digits)) {
         *result->sign = 0;
         int zero = 0;
-        sList_Add(result->digits, (void*)&zero);
+        sList_Add(result->digits, (void*)&zero, NULL);
         return;
     }
     // QUE: what is the result of division by negative or by a bigger number? now it's done in a lazy way
@@ -238,55 +266,27 @@ void longNumber_Div(LongNumber *lnum1, LongNumber *lnum2, LongNumber *result) {
     SList *temp = sList_Init(divisibleReverted->nodeSize, divisibleReverted->freeFunc);
 
     sList_RevertTo(lnum1->digits, divisibleReverted);
-    // TODO: remove debug output
-    printf("--------------------divisibleReverted: {");
-    sList_Foreach(divisibleReverted, printDigit);
-    printf("}\n");
 
     SListNode *curNode = divisibleReverted->head;
     int subCount;
     while (curNode != NULL) {
 
         while ((buf->head == NULL) || (longNumber_DigitsIsLess(buf, lnum2->digits))) {
-            sList_Add(buf, curNode->val);
+            sList_Add(buf, curNode->val, NULL);
             curNode = curNode->next;
         }
-/*        printf("--------------------Before subtracting:\n"); // TODO: remove*/
-/*        printf("--------------------buf: {");*/
-/*        sList_Foreach(buf, printDigit);*/
-/*        printf("}\n");*/
-/*        printf("--------------------lnum2->digits: {");*/
-/*        sList_Foreach(lnum2->digits, printDigit);*/
-/*        printf("}\n");*/
 
         subCount = 0;
         while (!longNumber_DigitsIsLess(buf, lnum2->digits)) {
             // QUE: how do I make this orthodoxial? There are too many memory operations
             sList_CopyTo(buf, &temp);
 
-/*            printf("--------------------temp (after copying): {");*/
-/*            sList_Foreach(temp, printDigit);*/
-/*            printf("}\n");*/
-
             longNumber_DigitsSub(temp, lnum2->digits, buf);
             sList_Revert(&buf);
             subCount++;
-
-/*            printf("--------------------Subtracted.\n");*/
-/*            printf("--------------------buf: {");*/
-/*            sList_Foreach(buf, printDigit);*/
-/*            printf("}\n");*/
         }
 
-/*        printf("--------------------After subtracting:\n"); // TODO: remove*/
-/*        printf("--------------------buf: {");*/
-/*        sList_Foreach(buf, printDigit);*/
-/*        printf("}\n");*/
-/*        printf("--------------------lnum2->digits: {");*/
-/*        sList_Foreach(lnum2->digits, printDigit);*/
-/*        printf("}\n");*/
-
-        sList_Add(result->digits, (void*)&subCount);
+        sList_Add(result->digits, (void*)&subCount, NULL);
     }
 
     // freeing memory
@@ -295,14 +295,11 @@ void longNumber_Div(LongNumber *lnum1, LongNumber *lnum2, LongNumber *result) {
     sList_Dispose(divisibleReverted);
 }
 
-// changes the sign of {lnum} to opposite
-void longNumber_DoNeg(LongNumber *lnum) {
-	*lnum->sign = !(*lnum->sign);
-}
-
 // releases memory held by {lnum}
 void longNumber_Dispose(LongNumber *lnum) {
-	assert(lnum != NULL);
+    if (lnum == NULL) {
+        return;
+    }
     sList_Dispose(lnum->digits);
     free(lnum->sign);
     free(lnum);
@@ -312,6 +309,11 @@ void longNumber_Dispose(LongNumber *lnum) {
 void longNumber_DisposeDelegate(void *lnum) {
     assert(lnum != NULL);
     longNumber_Dispose((LongNumber*)lnum);
+}
+
+// changes the sign of {lnum} to opposite
+void longNumber_DoNeg(LongNumber *lnum) {
+	*lnum->sign = !(*lnum->sign);
 }
 
 // creates and returns an empty LongNumber
@@ -342,6 +344,8 @@ void longNumber_Mult(LongNumber *lnum1, LongNumber *lnum2, LongNumber *result) {
 
 // prints {lnum} to stdio as decimal integer
 void longNumber_Print(LongNumber *lnum) {
+    assert(lnum->sign != NULL);
+    assert(lnum->digits != NULL);
     if (*lnum->sign) {
         printf("-");
     }

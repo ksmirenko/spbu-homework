@@ -9,8 +9,8 @@
 #include <string.h>
 #include "slist.h"
 
-// adds {newValue} to the head of {list}
-void sList_Add(SList *list, void *newValue) {
+// adds {newValue} to the head of {list} using {copyFunc} to copy data
+void sList_Add(SList *list, void *newValue, FunctionVoidPvoidPvoid copyFunc) {
 	assert(list != NULL);
 
     // creating new node
@@ -28,7 +28,16 @@ void sList_Add(SList *list, void *newValue) {
         return;
     }
     assert(temp->val != NULL);
-    memcpy(temp->val, newValue, list->nodeSize);
+    
+    // copying memory data
+    if (copyFunc == NULL) {
+        // does not need any special function to copy
+        memcpy(temp->val, newValue, list->nodeSize);
+    }
+    else {
+        // needs a special function to copy
+        copyFunc(&temp->val, newValue);
+    }
     
     temp->next = list->head;
     list->head = temp;
@@ -161,7 +170,7 @@ void sList_RevertTo(SList *listFrom, SList *listTo) {
     sList_Clear(listTo);
     SListNode *cur = listFrom->head;
     while (cur != NULL) {
-        sList_Add(listTo, cur->val);
+        sList_Add(listTo, cur->val, NULL);
         cur = cur->next;    
     }
 }

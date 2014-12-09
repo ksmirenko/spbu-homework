@@ -32,8 +32,8 @@ Stack*  stack_Init(int nodeSize, FunctionVoidPvoid freeFunction);
 // writes the value of the top element of {stack} to {retValue} and then removes the top element
 void	stack_Pop(Stack *stack, void *retValue);
 
-// puts {newValue} to {stack}
-void	stack_Push(Stack *stack, void *newValue);
+// puts {newValue} to {stack} using {copyFunc}
+void    stack_Push(Stack *stack, void *newValue, FunctionVoidPvoidPvoid copyFunc);
 
 // writes the value of the top element of {stack} to {retValue}
 void	stack_Top(Stack *stack, void *retValue);

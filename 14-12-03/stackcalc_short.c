@@ -44,7 +44,7 @@ int doOperation(int opType) {
         default:
             return -3;
     }
-    stack_Push(stack, (void*)&buf3);
+    stack_Push(stack, (void*)&buf3, NULL);
     return 0;
 }
 
@@ -151,7 +151,7 @@ int main() {
         else if ((c == ' ') || (c == '\n') || (c == '\r')) {
             if (isReadingNumber) {
                 isReadingNumber = 0;
-                stack_Push(stack, (void*)&curNumber);
+                stack_Push(stack, (void*)&curNumber, NULL);
                 curNumber = 0;
             }
         }

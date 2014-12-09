@@ -9,8 +9,12 @@
 #include <stdlib.h>
 
 // a common function that returns void and takes void*
-// such functions are used here to free list nodes
+// such functions are used in SList to free nodes
 typedef void (*FunctionVoidPvoid)(void*);
+
+// a common function that returns void and takes void*, void*
+// such functions are used in SList to add new nodes
+typedef void (*FunctionVoidPvoidPvoid)(void*, void*);
 
 // a single list node
 typedef struct _SListNode {
@@ -30,8 +34,8 @@ typedef struct {
 	FunctionVoidPvoid freeFunc;
 } SList;
 
-// adds {newValue} to the head of {list}
-void	sList_Add(SList *list, void *newValue);
+// adds {newValue} to the head of {list} using {copyFunc} to copy data
+void    sList_Add(SList *list, void *newValue, FunctionVoidPvoidPvoid copyFunc);
 
 // removes all nodes of {list}
 void    sList_Clear(SList *list);

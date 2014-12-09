@@ -9,6 +9,7 @@
 #include <string.h>
 #include "slist.h"
 #include "stack.h"
+#include "longnumber.h"
 
 // clears {stack}
 void stack_Clear(Stack *stack) {
@@ -63,9 +64,9 @@ void stack_Pop(Stack *stack, void *retValue) {
     }
 }
 
-// puts {newValue} to {stack}
-void stack_Push(Stack *stack, void *newValue) {
-    sList_Add(stack->list, newValue);
+// puts {newValue} to {stack} using {copyFunc}
+void stack_Push(Stack *stack, void *newValue, FunctionVoidPvoidPvoid copyFunc) {
+    sList_Add(stack->list, newValue, copyFunc);
     ++*stack->size;
 }
 
