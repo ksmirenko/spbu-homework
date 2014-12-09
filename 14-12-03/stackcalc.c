@@ -22,7 +22,6 @@ LongNumber *buf1, *buf2, *buf3;
 
 int doOperation(int opType) {
     if (*stack->size < 2) {
-        fprintf(stderr, "CRITICAL: stack size less than 2\n"); // TODO: remove
         return -1;
     }
     longNumber_Clear(buf1);
@@ -35,7 +34,6 @@ int doOperation(int opType) {
             longNumber_Sum(buf1, buf2, buf3);
             break;
         case OPER_TYPE_SUB:
-            fprintf(stderr, "SUB...\n"); // TODO: remove
             longNumber_Print(buf1);
             printf("\n");
             longNumber_Print(buf2);
@@ -90,9 +88,6 @@ int main() {
         if ((c >= '0') && (c <= MAX_DIGIT_CHAR)) {
             longNumber_DigitAdd(curNumber, c - '0');
             isReadingNumber = 1;
-            printf("Added digit %d. curNumber: {", c - '0'); // TODO: remove
-            longNumber_Print(curNumber);
-            printf("}\n");
         }
 
         // subtraction or beginning of a negative int
@@ -183,11 +178,15 @@ int main() {
                 longNumber_Print(curNumber);
                 printf("}\n");
                 stack_Push(stack, (void*)&curNumber);
-                longNumber_Clear(curNumber); // TODO: remove
-                stack_Top(stack, (void*)&curNumber);
-                printf("Stack top: {"); // TODO: remove
-                longNumber_Print(curNumber);
+                
+                // debug section TODO remove
+                LongNumber *temp = longNumber_Init();
+                stack_Top(stack, (void*)&temp);
+                printf("Stack top: {");
+                longNumber_Print(temp);
                 printf("}\n");
+                longNumber_Dispose(temp);
+                
                 longNumber_Clear(curNumber);
             }
         }
