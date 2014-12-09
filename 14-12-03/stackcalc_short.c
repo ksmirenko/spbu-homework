@@ -1,3 +1,8 @@
+/*
+    Stack calculator (int numbers).
+    Author: Kirill Smirenko, group 171
+*/
+
 #include <stdio.h>
 #include "stack.h"
 
@@ -6,22 +11,53 @@ const int ARITHM_BASE = 10;
 const char MAX_DIGIT_CHAR = '9';
 
 int doSum(Stack *stack) {
-    // TODO
+    if (*stack->size < 2) {
+        return -1;
+    }
+    int numLast, numPreLast;
+    stack_Pop(stack, (void*)&numLast);
+    stack_Pop(stack, (void*)&numPreLast);
+    int result = numPreLast + numLast;
+    stack_Push(stack, (void*)&result);
     return 0;
 }
 
 int doNeg(Stack *stack) {
-    // TODO
+    if (*stack->size < 2) {
+        return -1;
+    }
+    int numLast, numPreLast;
+    stack_Pop(stack, (void*)&numLast);
+    stack_Pop(stack, (void*)&numPreLast);
+    int result = numPreLast - numLast;
+    stack_Push(stack, (void*)&result);
     return 0;
 }
 
 int doMult(Stack *stack) {
-    // TODO
+    if (*stack->size < 2) {
+        return -1;
+    }
+    int numLast, numPreLast;
+    stack_Pop(stack, (void*)&numLast);
+    stack_Pop(stack, (void*)&numPreLast);
+    int result = numPreLast * numLast;
+    stack_Push(stack, (void*)&result);
     return 0;
 }
 
 int doDiv(Stack *stack) {
-    // TODO
+    if (*stack->size < 2) {
+        return -1;
+    }
+    int numLast, numPreLast;
+    stack_Pop(stack, (void*)&numLast);
+    if (numLast == 0) {
+        return -2;
+    }
+    stack_Pop(stack, (void*)&numPreLast);
+    int result = numPreLast / numLast;
+    stack_Push(stack, (void*)&result);
     return 0;
 }
 
@@ -35,7 +71,7 @@ int main() {
         printf("Type '=' to print the calculated value and exit.\n");
     }
 
-    int curNumber = 0, numLast, numPreLast, isReadingNumber = 0;
+    int curNumber = 0, isReadingNumber = 0;
     char c;
     scanf("%c", &c);
     // main loop
@@ -50,7 +86,9 @@ int main() {
         else if (c == '-') {
             if (isReadingNumber) {
                 fprintf(stderr, "Error: incorrect input format; aborting...\n");
-                break;
+                fprintf(stderr, "(\tgot symbol '%c' while reading a number)", c);
+                stack_Dispose(stack);
+           		return -1;
             }
             scanf("%c", &c);
             if ((c >= '0') && (c <= MAX_DIGIT_CHAR)) { // negative int
@@ -58,15 +96,19 @@ int main() {
                 isReadingNumber = 1;
             }
             else if ((c == ' ') || (c == '\n')) { // subtraction
-                int result = doNeg(stack);
-                if (!result) {
-                    fprintf(stderr, "Error: invalid input commands; aborting...\n");
-                    break;
+                int errorCode = doNeg(stack);
+                if (!errorCode) {
+                    fprintf(stderr,
+                        "Error: invalid input commands (subtraction crashed); aborting...\n");
+                    stack_Dispose(stack);
+           		    return -1;
                 }
             }
             else { // something erroneous
                 fprintf(stderr, "Error: incorrect input format; aborting...\n");
-                break;
+                fprintf(stderr, "(\tgot symbol '%c' after '-')", c);
+                stack_Dispose(stack);
+           		return -1;
             }
         }
 
@@ -74,12 +116,15 @@ int main() {
         else if (c == '+') {
             if (isReadingNumber) {
                 fprintf(stderr, "Error: incorrect input format; aborting...\n");
-                break;
+                fprintf(stderr, "(\tgot symbol '%c' while reading a number)", c);
+                stack_Dispose(stack);
+           		return -1;
             }
-            int result = doSum(stack);
-            if (!result) {
-                fprintf(stderr, "Error: invalid input commands; aborting...\n");
-                break;
+            int errorCode = doSum(stack);
+            if (errorCode) {
+                fprintf(stderr, "Error: invalid input commands (addition crashed); aborting...\n");
+                stack_Dispose(stack);
+           		return -1;
             }
         }
 
@@ -87,12 +132,15 @@ int main() {
         else if (c == '*') {
             if (isReadingNumber) {
                 fprintf(stderr, "Error: incorrect input format; aborting...\n");
-                break;
+                fprintf(stderr, "(\tgot symbol '%c' while reading a number)", c);
+                stack_Dispose(stack);
+           		return -1;
             }
-            int result = doMult(stack);
-            if (!result) {
-                fprintf(stderr, "Error: invalid input commands; aborting...\n");
-                break;
+            int errorCode = doMult(stack);
+            if (errorCode) {
+                fprintf(stderr, "Error: invalid input commands (multiplication crashed); aborting...\n");
+                stack_Dispose(stack);
+           		return -1;
             }
         }
         
@@ -100,17 +148,20 @@ int main() {
         else if (c == '/') {
             if (isReadingNumber) {
                 fprintf(stderr, "Error: incorrect input format; aborting...\n");
-                break;
+                fprintf(stderr, "(\tgot symbol '%c' while reading a number)", c);
+                stack_Dispose(stack);
+           		return -1;
             }
-            int result = doDiv(stack);
-            if (!result) {
-                fprintf(stderr, "Error: invalid input commands; aborting...\n");
-                break;
+            int errorCode = doDiv(stack);
+            if (errorCode) {
+                fprintf(stderr, "Error: invalid input commands (division crashed); aborting...\n");
+                stack_Dispose(stack);
+           		return -1;
             }
         }
 
         // separator
-        else if ((c == ' ') || (c == '\n')) {
+        else if ((c == ' ') || (c == '\n') || (c == '\r')) {
             if (isReadingNumber) {
                 isReadingNumber = 0;
                 stack_Push(stack, (void*)&curNumber);
@@ -120,14 +171,22 @@ int main() {
 
         // something erroneous
         else {
-            fprintf(stderr, "Error: incorrect input format; aborting...\n");
-            break;
+            fprintf(stderr, "Error: incorrect symbol '%c'; aborting...\n", c);
+            stack_Dispose(stack);
+            return -1;
         }
 
         scanf("%c", &c);
     }
 
-    // TODO: output
+    if (*stack->size == 1) {
+        int answer;
+        stack_Pop(stack, (void*)&answer);
+        printf("%d\n", answer);
+    }
+    else {
+        fprintf(stderr, "Error: invalid input commands.\n");
+    }
 
     stack_Dispose(stack);
 }

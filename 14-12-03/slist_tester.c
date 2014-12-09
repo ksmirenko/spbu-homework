@@ -1,6 +1,6 @@
 /*
     Program for testing the (generic) singly linked list.
-	Call format: <exe> [<input file> [<output file>]]
+	Call format: <launcher> [<input file> [<output file>]]
     Author: Kirill Smirenko, group 171
 */
 
