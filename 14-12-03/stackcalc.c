@@ -107,6 +107,7 @@ int main() {
             if ((c >= '0') && (c <= MAX_DIGIT_CHAR)) { // negative int
                 longNumber_Clear(curNumber);
                 longNumber_DoNeg(curNumber);
+                longNumber_DigitAdd(curNumber, c - '0');
                 isReadingNumber = 1;
             }
             else if ((c == ' ') || (c == '\n')) { // subtraction

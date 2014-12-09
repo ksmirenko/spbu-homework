@@ -6,63 +6,50 @@
 #include <stdio.h>
 #include "stack.h"
 
+#define OPER_TYPE_SUM 0
+#define OPER_TYPE_SUB 1
+#define OPER_TYPE_MUL 2
+#define OPER_TYPE_DIV 3
+
 const int IS_INTERFACE_ENABLED = 1;
 const int ARITHM_BASE = 10;
 const char MAX_DIGIT_CHAR = '9';
 
-int doSum(Stack *stack) {
-    if (*stack->size < 2) {
-        return -1;
-    }
-    int numLast, numPreLast;
-    stack_Pop(stack, (void*)&numLast);
-    stack_Pop(stack, (void*)&numPreLast);
-    int result = numPreLast + numLast;
-    stack_Push(stack, (void*)&result);
-    return 0;
-}
+Stack *stack;
+int buf1, buf2, buf3;
 
-int doNeg(Stack *stack) {
+int doOperation(int opType) {
     if (*stack->size < 2) {
         return -1;
     }
-    int numLast, numPreLast;
-    stack_Pop(stack, (void*)&numLast);
-    stack_Pop(stack, (void*)&numPreLast);
-    int result = numPreLast - numLast;
-    stack_Push(stack, (void*)&result);
-    return 0;
-}
-
-int doMult(Stack *stack) {
-    if (*stack->size < 2) {
-        return -1;
+    stack_Pop(stack, (void*)&buf2);
+    stack_Pop(stack, (void*)&buf1);
+    switch (opType) {
+        case OPER_TYPE_SUM:
+            buf3 = buf1 + buf2;
+            break;
+        case OPER_TYPE_SUB:
+            buf3 = buf1 - buf2;
+            break;
+        case OPER_TYPE_MUL:
+            buf3 = buf1 * buf2;
+            break;
+        case OPER_TYPE_DIV:
+            // checking division by zero
+            if (!buf2) {
+                return -2;
+            }
+            buf3 = buf1 / buf2;
+            break;
+        default:
+            return -3;
     }
-    int numLast, numPreLast;
-    stack_Pop(stack, (void*)&numLast);
-    stack_Pop(stack, (void*)&numPreLast);
-    int result = numPreLast * numLast;
-    stack_Push(stack, (void*)&result);
-    return 0;
-}
-
-int doDiv(Stack *stack) {
-    if (*stack->size < 2) {
-        return -1;
-    }
-    int numLast, numPreLast;
-    stack_Pop(stack, (void*)&numLast);
-    if (numLast == 0) {
-        return -2;
-    }
-    stack_Pop(stack, (void*)&numPreLast);
-    int result = numPreLast / numLast;
-    stack_Push(stack, (void*)&result);
+    stack_Push(stack, (void*)&buf3);
     return 0;
 }
 
 int main() {
-    Stack *stack = stack_Init(sizeof(int), NULL);
+    stack = stack_Init(sizeof(int), NULL);
 
     if (IS_INTERFACE_ENABLED) {
         printf("Welcome to Stack Calculator!\n");
@@ -96,8 +83,8 @@ int main() {
                 isReadingNumber = 1;
             }
             else if ((c == ' ') || (c == '\n')) { // subtraction
-                int errorCode = doNeg(stack);
-                if (!errorCode) {
+                int errorCode = doOperation(OPER_TYPE_SUB);
+                if (errorCode) {
                     fprintf(stderr,
                         "Error: invalid input commands (subtraction crashed); aborting...\n");
                     stack_Dispose(stack);
@@ -120,7 +107,7 @@ int main() {
                 stack_Dispose(stack);
            		return -1;
             }
-            int errorCode = doSum(stack);
+            int errorCode = doOperation(OPER_TYPE_SUM);
             if (errorCode) {
                 fprintf(stderr, "Error: invalid input commands (addition crashed); aborting...\n");
                 stack_Dispose(stack);
@@ -136,7 +123,7 @@ int main() {
                 stack_Dispose(stack);
            		return -1;
             }
-            int errorCode = doMult(stack);
+            int errorCode = doOperation(OPER_TYPE_MUL);
             if (errorCode) {
                 fprintf(stderr, "Error: invalid input commands (multiplication crashed); aborting...\n");
                 stack_Dispose(stack);
@@ -152,7 +139,7 @@ int main() {
                 stack_Dispose(stack);
            		return -1;
             }
-            int errorCode = doDiv(stack);
+            int errorCode = doOperation(OPER_TYPE_DIV);
             if (errorCode) {
                 fprintf(stderr, "Error: invalid input commands (division crashed); aborting...\n");
                 stack_Dispose(stack);
