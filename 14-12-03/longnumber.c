@@ -14,25 +14,18 @@ void printDigit(void *elem) {
 
 // a delegate that is passed to SList as a CopyFunction
 void longNumber_CloneDelegate(void *memTo, void *memFrom) {
+    // initializing LongNumber at memTo
+    *(LongNumber**)memTo = longNumber_Init();
+
     LongNumber *lnumFrom = *(LongNumber**)memFrom;
-    LongNumber *lnumTo = (LongNumber*)memTo;
+    LongNumber *lnumTo = *(LongNumber**)memTo;
     
     assert(lnumTo != NULL);
     printf("-------------------OK 0\n");
-    lnumTo->digits = sList_Init(sizeof(int), NULL);
-    printf("-------------------OK 1\n");
-    lnumTo->sign = malloc(sizeof(int));
-    printf("-------------------OK 1.5\n");
-    if (lnumTo->sign == NULL) {
-        fprintf(stderr, "Error: not enough memory to create an int!\n");
-    }
-	assert(lnumTo->sign != NULL);
-    
-    printf("-------------------OK 2\n");
     *lnumTo->sign = *lnumFrom->sign;
-    printf("-------------------OK 3\n");
+    printf("-------------------OK 1\n");
     sList_CopyTo(lnumFrom->digits, &lnumTo->digits); // QUE: will it work?
-    
+
     printf("Copied to number: {");
     longNumber_Print(lnumTo);
     printf("}\n");

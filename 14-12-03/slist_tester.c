@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
         switch (curCommand) {
             case 'a':
                 scanf("%d", &arg);
-                sList_Add(list, (void*)(&arg));
+                sList_Add(list, (void*)(&arg), NULL);
                 break;
             case 'p':
                 sList_Foreach(list, printInt);

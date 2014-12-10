@@ -68,7 +68,7 @@ void memFree() {
 }
 
 int main() {
-    stack = stack_Init(sizeof(LongNumber), longNumber_DisposeDelegate);
+    stack = stack_Init(sizeof(LongNumber*), longNumber_DisposeDelegate);
     curNumber = longNumber_Init();
     buf3 = longNumber_Init();
 
@@ -175,6 +175,10 @@ int main() {
             if (isReadingNumber) {
                 isReadingNumber = 0;
                 
+                printf("Read number: {");
+                longNumber_Print(curNumber);
+                printf("}\n");
+                
                 stack_Push(stack, (void*)&curNumber, longNumber_CloneDelegate);
                 
                 // debug section TODO remove
@@ -187,17 +191,17 @@ int main() {
                 
                 longNumber_Clear(curNumber);
                 
-                // debug section TODO remove
-                temp = longNumber_Init();
-                stack_Top(stack, (void*)&temp);
-                printf("Stack top after clearing curNumber: {");
-                longNumber_Print(temp);
-                printf("}\n");
-                longNumber_Dispose(temp);
+/*                // debug section TODO remove*/
+/*                temp = longNumber_Init();*/
+/*                stack_Top(stack, (void*)&temp);*/
+/*                printf("Stack top after clearing curNumber: {");*/
+/*                longNumber_Print(temp);*/
+/*                printf("}\n");*/
+/*                longNumber_Dispose(temp);*/
             }
         }
 
-        // something erroneous
+        // got something erroneous
         else {
             fprintf(stderr, "Error: incorrect symbol '%c'; aborting...\n", c);
             memFree();

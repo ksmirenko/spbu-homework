@@ -1,9 +1,5 @@
-longnum.c (add mult and div)
-longnum_tester.c // a +|-|*|/ b
-TEST
-stack.c
-TEST
-stackCalc.c // int's
-TEST
-stackCalcLong.c // LongNum's
-TEST
+fix sList_Add
+finish stackcalc (long)
+rename longNumber_ to lnum_, sList_ to slist_
+prepare testers (slist, longnum, calc-s) for automatic testing (including EoF etc)
+test, memory test

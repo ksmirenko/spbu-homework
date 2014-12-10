@@ -3,23 +3,10 @@
 #include "slist.h"
 #include "longnumber.h"
 
+LongNumber *lnum1, *lnum2, *result;
+
 void printDigit1(void *elem) {
     printf("%d", *(int*)(elem));
-}
-
-// reads a number until new line and writes it to {number}
-void scanParseNumber(SList *number) {
-    char cur;
-    scanf("%c", &cur);
-    while (cur != '\n') {
-        if ((cur < '0') || (cur > '9')) {
-            fprintf(stderr, "Critical I/O error!\n");
-        }
-        assert((cur >= '0') && (cur <= '9'));
-        int digit = (int)cur - '0';
-        sList_Add(number, (void*)&digit);
-        scanf("%c", &cur);
-    }
 }
 
 // reads a number until line break, writes it to a newly created LongNumber and returns the least
@@ -32,8 +19,7 @@ LongNumber* scanParseLongNumber() {
         scanf("%c", &cur);
     }
     else {
-        int temp = (int)cur - '0';
-        sList_Add(number->digits, (void*)&temp);
+        longNumber_DigitAdd(number, (int)cur - '0');
         scanf("%c", &cur);
     }
     while (cur != '\n') {
@@ -42,116 +28,55 @@ LongNumber* scanParseLongNumber() {
             longNumber_Dispose(number);
         }
         assert((cur >= '0') && (cur <= '9'));
-        int digit = (int)cur - '0';
-        sList_Add(number->digits, (void*)&digit);
+        longNumber_DigitAdd(number, (int)cur - '0');
         scanf("%c", &cur);
     }
     return number;
 }
 
-void debugProc1() {
-    SList *orig = sList_Init(sizeof(int), NULL);
-
-/*    int temp = 2;*/
-/*    sList_Add(orig, (void*)&temp);*/
-
-    printf("--------------------Print a number: ");
-    scanParseNumber(orig);
-
-    printf("--------------------orig: {");
-    sList_Foreach(orig, printDigit1);
-    printf("}\n");
-
-    SList *copy = sList_Init(sizeof(int), NULL);
-
-    printf("--------------------Copying...\n");
-    sList_CopyTo(orig, &copy);
-    printf("--------------------Copied.\n");
-
-    printf("--------------------orig: {");
-    sList_Foreach(orig, printDigit1);
-    printf("}\n");
-    printf("--------------------copy: {");
-    sList_Foreach(copy, printDigit1);
-    printf("}\n");
-
-/*    sList_Clear(orig);*/
-/*    sList_Clear(copy);*/
-/*    printf("--------------------Cleared.\n");*/
-
-/*    printf("--------------------orig: {");*/
-/*    sList_Foreach(orig, printDigit1);*/
-/*    printf("}\n");*/
-
-    sList_Dispose(orig);
-    sList_Dispose(copy);
-    printf("--------------------Disposed.\n");
-}
-
-void debugProc2() {
-    int temp;
-    printf("--------------------Print a number: ");
-    SList *orig = sList_Init(sizeof(int), NULL);
-    scanParseNumber(orig);
-    SList *result = sList_Init(sizeof(int), NULL);
-
-    temp = 5;
-    longNumber_DigitsMultLongShort(orig, temp, &result);
-    
-
-    printf("--------------------Calculated.\n");
-
-    printf("--------------------Result: {");
-    sList_Foreach(result, printDigit1);
-    printf("}\n");
-
-    sList_Dispose(orig);
-    sList_Dispose(result);
+void memFree() {
+    longNumber_Dispose(lnum1);
+    longNumber_Dispose(lnum2);
+    longNumber_Dispose(result);
 }
 
 int main() {
     printf("Type the 1st number: ");
-    LongNumber *num1 = scanParseLongNumber();
+    lnum1 = scanParseLongNumber();
     printf("Type the 2nd number: ");
-    LongNumber *num2 = scanParseLongNumber();
+    lnum2 = scanParseLongNumber();
     printf("Type the operation (+,-,*,/): ");
     char op;    
     scanf("%c", &op);
 
-    LongNumber *result = longNumber_Init();
+    result = longNumber_Init();
     switch (op) {
         case '+':
-            longNumber_Sum(num1, num2, result);
+            longNumber_Sum(lnum1, lnum2, result);
             break;
         case '-':
-            longNumber_Sub(num1, num2, result);
+            longNumber_Sub(lnum1, lnum2, result);
             break;
         case '*':
-            longNumber_Mult(num1, num2, result);
+            longNumber_Mult(lnum1, lnum2, result);
             break;
         case '/':
-            longNumber_Div(num1, num2, result);
+            longNumber_Div(lnum1, lnum2, result);
             break;
         default:
             printf("I/O error\n");
-            // freeing memory
-            longNumber_Dispose(num1);
-            longNumber_Dispose(num2);
-            longNumber_Dispose(result);
+            memFree();
             return -1;
     }
 
-    longNumber_Print(num1);
+    longNumber_Print(lnum1);
     printf(" %c ", op);
-    longNumber_Print(num2);
+    longNumber_Print(lnum2);
     printf(" == ");
     longNumber_Print(result);
     printf("\n");
 
-    // freeing memory
-    longNumber_Dispose(num1);
-    longNumber_Dispose(num2);
-    longNumber_Dispose(result);
+    memFree();
 
     return 0;
 }

@@ -14,33 +14,36 @@ void sList_Add(SList *list, void *newValue, FunctionVoidPvoidPvoid copyFunc) {
 	assert(list != NULL);
 
     // creating new node
-    SListNode *temp = (SListNode *)malloc(sizeof(SListNode));
-    if (temp == NULL) {
+    SListNode *newNode = (SListNode *)malloc(sizeof(SListNode));
+    if (newNode == NULL) {
         fprintf(stderr, "Error: not enough memory to create an SListNode!\n");
         return;
     }
-	assert(temp != NULL);
+	assert(newNode != NULL);
 
     // creating and writing the node's value
-    temp->val = malloc(sizeof(list->nodeSize));
-    if (temp->val == NULL) {
+    newNode->val = malloc(sizeof(list->nodeSize));
+    if (newNode->val == NULL) {
         fprintf(stderr, "Error: not enough memory to write a SListNode's value!\n");
         return;
     }
-    assert(temp->val != NULL);
+    assert(newNode->val != NULL);
     
     // copying memory data
     if (copyFunc == NULL) {
         // does not need any special function to copy
-        memcpy(temp->val, newValue, list->nodeSize);
+        memcpy(newNode->val, newValue, list->nodeSize);
     }
     else {
         // needs a special function to copy
-        copyFunc(&temp->val, newValue);
+        printf("COPYING\n");
+        copyFunc(newNode->val, newValue);
     }
     
-    temp->next = list->head;
-    list->head = temp;
+    newNode->next = list->head;
+    list->head = newNode;
+    
+    //assert(0);
 }
 
 // removes all nodes of {list}

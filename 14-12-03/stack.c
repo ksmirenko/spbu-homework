@@ -66,6 +66,7 @@ void stack_Pop(Stack *stack, void *retValue) {
 
 // puts {newValue} to {stack} using {copyFunc}
 void stack_Push(Stack *stack, void *newValue, FunctionVoidPvoidPvoid copyFunc) {
+    printf("PUSHING!\n");
     sList_Add(stack->list, newValue, copyFunc);
     ++*stack->size;
 }

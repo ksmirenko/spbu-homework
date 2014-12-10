@@ -13,7 +13,7 @@
 typedef void (*FunctionVoidPvoid)(void*);
 
 // a common function that returns void and takes void*, void*
-// such functions are used in SList to add new nodes
+// such functions are used in SList to add new nodes (to do deep copies)
 typedef void (*FunctionVoidPvoidPvoid)(void*, void*);
 
 // a single list node
