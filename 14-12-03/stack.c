@@ -9,7 +9,6 @@
 #include <string.h>
 #include "slist.h"
 #include "stack.h"
-#include "longnumber.h"
 
 // clears {stack}
 void stack_Clear(Stack *stack) {
@@ -36,8 +35,8 @@ void stack_Dispose(Stack *stack) {
     free(stack);
 }
 
-// initializes and returns a new empty stack of element size {nodeSize} which uses {freeFunction} to free elements
-Stack* stack_Init(int nodeSize, FunctionVoidPvoid freeFunction) {
+// initializes and returns a new empty list of node size {nodeSize} which uses {copyFunction} to copy nodes and {freeFunction} to free nodes
+Stack*  stack_Init(int nodeSize, FunctionVoidPvoidPvoid copyFunction, FunctionVoidPvoid freeFunction) {
     Stack *newStack = (Stack*)malloc(sizeof(Stack));
     if (newStack == NULL) {
         fprintf(stderr, "Error: not enough memory to create an Stack!\n");
@@ -51,7 +50,7 @@ Stack* stack_Init(int nodeSize, FunctionVoidPvoid freeFunction) {
     }
 	assert(newStack->size != NULL);
     *newStack->size = 0;
-    newStack->list = sList_Init(nodeSize, freeFunction);
+    newStack->list = sList_Init(nodeSize, copyFunction, freeFunction);
     return newStack;
 }
 
@@ -59,21 +58,38 @@ Stack* stack_Init(int nodeSize, FunctionVoidPvoid freeFunction) {
 void stack_Pop(Stack *stack, void *retValue) {
     stack_Top(stack, retValue);
     if (stack->size > 0) {
-        sList_Remove(stack->list, retValue);
+        void *trash = malloc(stack->list->nodeSize);
+        sList_Remove(stack->list, trash);
         --*stack->size;
+        free(trash);
     }
 }
 
-// puts {newValue} to {stack} using {copyFunc}
-void stack_Push(Stack *stack, void *newValue, FunctionVoidPvoidPvoid copyFunc) {
-    printf("PUSHING!\n");
-    sList_Add(stack->list, newValue, copyFunc);
+// removes the top element of {stack}
+void stack_Pop1(Stack *stack) {
+    if (stack->size > 0) {
+        void *trash = malloc(stack->list->nodeSize);
+        sList_Remove(stack->list, trash);
+        --*stack->size;
+        free(trash);
+    }
+}
+
+
+// puts {newValue} to {stack}
+void stack_Push(Stack *stack, void *newValue) {
+    sList_Add(stack->list, newValue);
     ++*stack->size;
 }
 
 // writes the value of the top element of {stack} to {retValue}
 void stack_Top(Stack *stack, void *retValue) {
     if (stack->size > 0) {
-        memcpy(retValue, stack->list->head->val, stack->list->nodeSize);
+        if (stack->list->copyFunc == NULL) {
+            memcpy(retValue, stack->list->head->val, stack->list->nodeSize);
+        }
+        else {
+            stack->list->copyFunc(retValue, stack->list->head->val);
+        }
     }
 }

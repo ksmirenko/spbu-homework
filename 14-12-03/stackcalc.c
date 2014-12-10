@@ -13,6 +13,7 @@
 #define OPER_TYPE_DIV 3
 
 const int IS_INTERFACE_ENABLED = 1;
+const int IS_PRINTING_STACK = 1;
 const int ARITHM_BASE = 10;
 const char MAX_DIGIT_CHAR = '9';
 
@@ -20,24 +21,55 @@ Stack *stack;
 LongNumber *curNumber;
 LongNumber *buf1, *buf2, *buf3;
 
+void printStack() {
+    printf("--------------[\n");
+    if (stack->size > 0) {
+        SListNode *curNode = stack->list->head;
+        while (curNode != NULL) {
+            printf("--------------{");
+            longNumber_Print(*(LongNumber**)curNode->val);
+            printf("}\n");
+            curNode = curNode->next;
+        }
+    }
+    printf("--------------]\n");
+}
+
 int doOperation(int opType) {
     if (*stack->size < 2) {
         return -1;
     }
-    longNumber_Clear(buf1);
-    longNumber_Clear(buf2);
+    longNumber_Dispose(buf1);
+    longNumber_Dispose(buf2);
     longNumber_Clear(buf3);
+
     stack_Pop(stack, (void*)&buf2);
     stack_Pop(stack, (void*)&buf1);
+
+/*    // TODO: remove debug section    */
+/*    stack_Top(stack, (void*)&buf2);*/
+/*    printf("buf2: {");*/
+/*    longNumber_Print(buf2);*/
+/*    printf("}\n");*/
+/*    */
+/*    stack_Pop1(stack);*/
+/*    printf("Stack after popping one:\n");*/
+/*    printStack();*/
+/*    printf("buf2: {");*/
+/*    longNumber_Print(buf2);*/
+/*    printf("}\n");*/
+/*    */
+/*    stack_Top(stack, (void*)&buf1);*/
+/*    printf("buf1: {");*/
+/*    longNumber_Print(buf1);*/
+/*    printf("}\n");*/
+/*    stack_Pop1(stack);*/
+
     switch (opType) {
         case OPER_TYPE_SUM:
             longNumber_Sum(buf1, buf2, buf3);
             break;
         case OPER_TYPE_SUB:
-            longNumber_Print(buf1);
-            printf("\n");
-            longNumber_Print(buf2);
-            printf("\n");
             longNumber_Sub(buf1, buf2, buf3);
             break;
         case OPER_TYPE_MUL:
@@ -46,7 +78,7 @@ int doOperation(int opType) {
         case OPER_TYPE_DIV:
             // checking division by zero
             if ((buf2->digits != NULL)
-            && (*(int*)buf2->digits->head == 0)
+            && (*(int*)buf2->digits->head->val == 0)
             && (buf2->digits->head->next == NULL)) {
                 return -2;
             }
@@ -55,7 +87,10 @@ int doOperation(int opType) {
         default:
             return -3;
     }
-    stack_Push(stack, (void*)&buf3, longNumber_CloneDelegate);
+    stack_Push(stack, (void*)&buf3);
+    if (IS_PRINTING_STACK) {
+        printStack();
+    }
     return 0;
 }
 
@@ -68,8 +103,10 @@ void memFree() {
 }
 
 int main() {
-    stack = stack_Init(sizeof(LongNumber*), longNumber_DisposeDelegate);
+    stack = stack_Init(sizeof(LongNumber*), longNumber_CloneDelegate, longNumber_DisposeDelegate);
     curNumber = longNumber_Init();
+    buf1 = longNumber_Init();
+    buf2 = longNumber_Init();
     buf3 = longNumber_Init();
 
     if (IS_INTERFACE_ENABLED) {
@@ -78,6 +115,8 @@ int main() {
         printf("Please use Reverse Polish notation.\n");
         printf("Type '=' to print the calculated value and exit.\n");
     }
+
+    printStack();
 
     int isReadingNumber = 0;
     char c;
@@ -107,7 +146,7 @@ int main() {
             }
             else if ((c == ' ') || (c == '\n')) { // subtraction
                 int errorCode = doOperation(OPER_TYPE_SUB);
-                if (!errorCode) {
+                if (errorCode) {
                     fprintf(stderr,
                         "Error: invalid input commands (subtraction crashed: %d); aborting...\n", errorCode);
                     memFree();
@@ -173,31 +212,30 @@ int main() {
         // separator
         else if ((c == ' ') || (c == '\n') || (c == '\r')) {
             if (isReadingNumber) {
-                isReadingNumber = 0;
+                isReadingNumber = 0;                
+                stack_Push(stack, (void*)&curNumber);
                 
-                printf("Read number: {");
-                longNumber_Print(curNumber);
-                printf("}\n");
-                
-                stack_Push(stack, (void*)&curNumber, longNumber_CloneDelegate);
-                
-                // debug section TODO remove
-                LongNumber *temp = longNumber_Init();
-                stack_Top(stack, (void*)&temp);
-                printf("Stack top: {");
-                longNumber_Print(temp);
-                printf("}\n");
-                longNumber_Dispose(temp);
+/*                // debug section TODO remove*/
+/*                LongNumber *temp = longNumber_Init();*/
+/*                stack_Top(stack, (void*)&temp);*/
+/*                printf("Stack top: {");*/
+/*                longNumber_Print(temp);*/
+/*                printf("}\n");*/
+/*                longNumber_Dispose(temp);*/
                 
                 longNumber_Clear(curNumber);
                 
 /*                // debug section TODO remove*/
-/*                temp = longNumber_Init();*/
+/*                LongNumber *temp = longNumber_Init();*/
 /*                stack_Top(stack, (void*)&temp);*/
 /*                printf("Stack top after clearing curNumber: {");*/
 /*                longNumber_Print(temp);*/
 /*                printf("}\n");*/
 /*                longNumber_Dispose(temp);*/
+                
+                if (IS_PRINTING_STACK) {
+                    printStack();
+                }
             }
         }
 

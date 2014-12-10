@@ -1,5 +1,3 @@
-fix sList_Add
-finish stackcalc (long)
 rename longNumber_ to lnum_, sList_ to slist_
 prepare testers (slist, longnum, calc-s) for automatic testing (including EoF etc)
 test, memory test

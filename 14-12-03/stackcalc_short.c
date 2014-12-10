@@ -44,12 +44,12 @@ int doOperation(int opType) {
         default:
             return -3;
     }
-    stack_Push(stack, (void*)&buf3, NULL);
+    stack_Push(stack, (void*)&buf3);
     return 0;
 }
 
 int main() {
-    stack = stack_Init(sizeof(int), NULL);
+    stack = stack_Init(sizeof(int), NULL, NULL);
 
     if (IS_INTERFACE_ENABLED) {
         printf("Welcome to Stack Calculator!\n");
@@ -151,7 +151,7 @@ int main() {
         else if ((c == ' ') || (c == '\n') || (c == '\r')) {
             if (isReadingNumber) {
                 isReadingNumber = 0;
-                stack_Push(stack, (void*)&curNumber, NULL);
+                stack_Push(stack, (void*)&curNumber);
                 curNumber = 0;
             }
         }

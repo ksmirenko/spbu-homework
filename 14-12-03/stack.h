@@ -26,14 +26,17 @@ void    stack_CopyTo(Stack *stackFrom, Stack *stackTo);
 // releases system resources held by {stack}
 void	stack_Dispose(Stack *stack);
 
-// initializes and returns a new empty list of node size {nodeSize} which uses {freeFunction} to free nodes
-Stack*  stack_Init(int nodeSize, FunctionVoidPvoid freeFunction);
+// initializes and returns a new empty list of node size {nodeSize} which uses {copyFunction} to copy nodes and {freeFunction} to free nodes
+Stack*  stack_Init(int nodeSize, FunctionVoidPvoidPvoid copyFunction, FunctionVoidPvoid freeFunction);
 
 // writes the value of the top element of {stack} to {retValue} and then removes the top element
 void	stack_Pop(Stack *stack, void *retValue);
 
-// puts {newValue} to {stack} using {copyFunc}
-void    stack_Push(Stack *stack, void *newValue, FunctionVoidPvoidPvoid copyFunc);
+// removes the top element of {stack}
+void	stack_Pop1(Stack *stack);
+
+// puts {newValue} to {stack}
+void    stack_Push(Stack *stack, void *newValue);
 
 // writes the value of the top element of {stack} to {retValue}
 void	stack_Top(Stack *stack, void *retValue);

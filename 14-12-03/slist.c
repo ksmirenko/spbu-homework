@@ -10,7 +10,7 @@
 #include "slist.h"
 
 // adds {newValue} to the head of {list} using {copyFunc} to copy data
-void sList_Add(SList *list, void *newValue, FunctionVoidPvoidPvoid copyFunc) {
+void sList_Add(SList *list, void *newValue) {
 	assert(list != NULL);
 
     // creating new node
@@ -30,14 +30,13 @@ void sList_Add(SList *list, void *newValue, FunctionVoidPvoidPvoid copyFunc) {
     assert(newNode->val != NULL);
     
     // copying memory data
-    if (copyFunc == NULL) {
+    if (list->copyFunc == NULL) {
         // does not need any special function to copy
         memcpy(newNode->val, newValue, list->nodeSize);
     }
     else {
         // needs a special function to copy
-        printf("COPYING\n");
-        copyFunc(newNode->val, newValue);
+        list->copyFunc(newNode->val, newValue);
     }
     
     newNode->next = list->head;
@@ -91,8 +90,8 @@ void sList_Foreach(SList *list, FunctionVoidPvoid function) {
     }
 }
 
-// initializes and returns a new empty list of node size {nodeSize} which uses {freeFunction} to free nodes
-SList* sList_Init(int nodeSize, FunctionVoidPvoid freeFunction) {
+// initializes and returns a new empty list of node size {nodeSize} which uses {copyFunction} to copy nodes and {freeFunction} to free nodes
+SList*  sList_Init(int nodeSize, FunctionVoidPvoidPvoid copyFunction, FunctionVoidPvoid freeFunction) {
 	assert(nodeSize > 0);
 	SList *temp = (SList*)malloc(sizeof(SList));
     if (temp == NULL) {
@@ -102,6 +101,7 @@ SList* sList_Init(int nodeSize, FunctionVoidPvoid freeFunction) {
 	assert(temp != NULL);
 	temp->nodeSize = nodeSize;
     temp->head = NULL;
+    temp->copyFunc = copyFunction;
     temp->freeFunc = freeFunction;
     return temp;
 }
@@ -160,7 +160,7 @@ void sList_RemoveFirstOcc(SList *list, void *value) {
 
 // reverts {list}
 void sList_Revert(SList **list) {
-    SList *revDigits = sList_Init((*list)->nodeSize, (*list)->freeFunc);
+    SList *revDigits = sList_Init((*list)->nodeSize, (*list)->copyFunc, (*list)->freeFunc);
     SList *trash = (*list);
     sList_RevertTo((*list), revDigits);
     (*list) = revDigits;
@@ -173,7 +173,7 @@ void sList_RevertTo(SList *listFrom, SList *listTo) {
     sList_Clear(listTo);
     SListNode *cur = listFrom->head;
     while (cur != NULL) {
-        sList_Add(listTo, cur->val, NULL);
+        sList_Add(listTo, cur->val);
         cur = cur->next;    
     }
 }

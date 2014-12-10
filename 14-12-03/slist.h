@@ -30,12 +30,14 @@ typedef struct {
 	size_t nodeSize;
 	// head node of the list
 	SListNode *head;
+	// function that is used to copy node data
+	FunctionVoidPvoidPvoid copyFunc;
 	// function that is used to free nodes
 	FunctionVoidPvoid freeFunc;
 } SList;
 
-// adds {newValue} to the head of {list} using {copyFunc} to copy data
-void    sList_Add(SList *list, void *newValue, FunctionVoidPvoidPvoid copyFunc);
+// adds {newValue} to the head of {list}
+void    sList_Add(SList *list, void *newValue);
 
 // removes all nodes of {list}
 void    sList_Clear(SList *list);
@@ -49,8 +51,8 @@ void	sList_Dispose(SList *list);
 // invokes {function} for each element of {list} (starting from head)
 void    sList_Foreach(SList *list, FunctionVoidPvoid function);
 
-// initializes and returns a new empty list of node size {nodeSize} which uses {freeFunction} to free nodes
-SList*  sList_Init(int nodeSize, FunctionVoidPvoid freeFunction);
+// initializes and returns a new empty list of node size {nodeSize} which uses {copyFunction} to copy nodes and {freeFunction} to free nodes
+SList*  sList_Init(int nodeSize, FunctionVoidPvoidPvoid copyFunction, FunctionVoidPvoid freeFunction);
 
 // writes the value of the head node of {list} to {retValue} and then removes the head node
 void	sList_Remove(SList *list, void *retValue);
