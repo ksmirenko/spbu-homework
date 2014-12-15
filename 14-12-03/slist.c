@@ -10,13 +10,13 @@
 #include "slist.h"
 
 // adds {newValue} to the head of {list} using {copyFunc} to copy data
-void sList_Add(SList *list, void *newValue) {
+void slist_Add(Slist *list, void *newValue) {
 	assert(list != NULL);
 
     // creating new node
-    SListNode *newNode = (SListNode *)malloc(sizeof(SListNode));
+    SlistNode *newNode = (SlistNode *)malloc(sizeof(SlistNode));
     if (newNode == NULL) {
-        fprintf(stderr, "Error: not enough memory to create an SListNode!\n");
+        fprintf(stderr, "Error: not enough memory to create an SlistNode!\n");
         return;
     }
 	assert(newNode != NULL);
@@ -24,7 +24,7 @@ void sList_Add(SList *list, void *newValue) {
     // creating and writing the node's value
     newNode->val = malloc(sizeof(list->nodeSize));
     if (newNode->val == NULL) {
-        fprintf(stderr, "Error: not enough memory to write a SListNode's value!\n");
+        fprintf(stderr, "Error: not enough memory to write a SlistNode's value!\n");
         return;
     }
     assert(newNode->val != NULL);
@@ -46,9 +46,9 @@ void sList_Add(SList *list, void *newValue) {
 }
 
 // removes all nodes of {list}
-void sList_Clear(SList *list) {
+void slist_Clear(Slist *list) {
     assert(list != NULL);
-    SListNode *cur;
+    SlistNode *cur;
 	while (list->head != NULL) {
 		cur = list->head;
 		list->head = list->head->next;
@@ -62,28 +62,28 @@ void sList_Clear(SList *list) {
 }
 
 // writes a deep copy of {listFrom} to {listTo}
-void sList_CopyTo(SList *listFrom, SList **listTo) {
+void slist_CopyTo(Slist *listFrom, Slist **listTo) {
     assert(listFrom != NULL);
-    sList_RevertTo(listFrom, *listTo);
-    sList_Revert(listTo);
+    slist_RevertTo(listFrom, *listTo);
+    slist_Revert(listTo);
 }
 
 // releases system resources held by {list}
-void sList_Dispose(SList *list) {
+void slist_Dispose(Slist *list) {
     if (list == NULL) {
         return;
     }
 	// freeing nodes
-	sList_Clear(list);
+	slist_Clear(list);
 	// freeing list
 	free(list);
 }
 
 // invokes {function} for each element of {list} (starting from head)
-void sList_Foreach(SList *list, FunctionVoidPvoid function) {
+void slist_Foreach(Slist *list, FunctionVoidPvoid function) {
     assert(list != NULL);    
     assert(function != NULL);
-    SListNode *curNode = list->head;
+    SlistNode *curNode = list->head;
     while (curNode != NULL) {
         function(curNode->val);
         curNode = curNode->next;
@@ -91,11 +91,11 @@ void sList_Foreach(SList *list, FunctionVoidPvoid function) {
 }
 
 // initializes and returns a new empty list of node size {nodeSize} which uses {copyFunction} to copy nodes and {freeFunction} to free nodes
-SList*  sList_Init(int nodeSize, FunctionVoidPvoidPvoid copyFunction, FunctionVoidPvoid freeFunction) {
+Slist*  slist_Init(int nodeSize, FunctionVoidPvoidPvoid copyFunction, FunctionVoidPvoid freeFunction) {
 	assert(nodeSize > 0);
-	SList *temp = (SList*)malloc(sizeof(SList));
+	Slist *temp = (Slist*)malloc(sizeof(Slist));
     if (temp == NULL) {
-        fprintf(stderr, "Error: not enough memory to create an SList!\n");
+        fprintf(stderr, "Error: not enough memory to create an Slist!\n");
         return NULL;
     }
 	assert(temp != NULL);
@@ -107,9 +107,9 @@ SList*  sList_Init(int nodeSize, FunctionVoidPvoidPvoid copyFunction, FunctionVo
 }
 
 // writes the value of the head node of {list} to {retValue} and then removes the head node
-void sList_Remove(SList *list, void *retValue) {
+void slist_Remove(Slist *list, void *retValue) {
 	assert(list != NULL);
-	SListNode *curHead = list->head;
+	SlistNode *curHead = list->head;
 	
 	if (curHead == NULL) {
 		retValue = NULL;
@@ -127,9 +127,9 @@ void sList_Remove(SList *list, void *retValue) {
 }
 
 // removes the first occurence of {value} in {list}
-void sList_RemoveFirstOcc(SList *list, void *value) {
+void slist_RemoveFirstOcc(Slist *list, void *value) {
 	assert(list != NULL);
-	SListNode *cur = list->head->next, *prev = list->head;
+	SlistNode *cur = list->head->next, *prev = list->head;
 	
 	if (!memcmp(list->head->val, value, list->nodeSize)) {
 		list->head = list->head->next;
@@ -159,21 +159,21 @@ void sList_RemoveFirstOcc(SList *list, void *value) {
 }
 
 // reverts {list}
-void sList_Revert(SList **list) {
-    SList *revDigits = sList_Init((*list)->nodeSize, (*list)->copyFunc, (*list)->freeFunc);
-    SList *trash = (*list);
-    sList_RevertTo((*list), revDigits);
+void slist_Revert(Slist **list) {
+    Slist *revDigits = slist_Init((*list)->nodeSize, (*list)->copyFunc, (*list)->freeFunc);
+    Slist *trash = (*list);
+    slist_RevertTo((*list), revDigits);
     (*list) = revDigits;
-    sList_Dispose(trash);
+    slist_Dispose(trash);
 }
 
 // writes the reverted {list} to {result}
-void sList_RevertTo(SList *listFrom, SList *listTo) {
+void slist_RevertTo(Slist *listFrom, Slist *listTo) {
     assert(listFrom != NULL);
-    sList_Clear(listTo);
-    SListNode *cur = listFrom->head;
+    slist_Clear(listTo);
+    SlistNode *cur = listFrom->head;
     while (cur != NULL) {
-        sList_Add(listTo, cur->val);
+        slist_Add(listTo, cur->val);
         cur = cur->next;    
     }
 }

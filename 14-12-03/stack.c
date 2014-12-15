@@ -13,7 +13,7 @@
 // clears {stack}
 void stack_Clear(Stack *stack) {
     assert(stack != NULL);
-    sList_Clear(stack->list);
+    slist_Clear(stack->list);
     *stack->size = 0;
 }
 
@@ -21,7 +21,7 @@ void stack_Clear(Stack *stack) {
 void stack_CopyTo(Stack *stackFrom, Stack *stackTo) {
     assert(stackFrom != NULL);
     *stackTo->size = *stackFrom->size;
-    sList_CopyTo(stackFrom->list, &stackTo->list);
+    slist_CopyTo(stackFrom->list, &stackTo->list);
 }
 
 // releases system resources held by {stack}
@@ -31,7 +31,7 @@ void stack_Dispose(Stack *stack) {
     }
     stack_Clear(stack);
     free(stack->size);
-    sList_Dispose(stack->list);
+    slist_Dispose(stack->list);
     free(stack);
 }
 
@@ -50,7 +50,7 @@ Stack*  stack_Init(int nodeSize, FunctionVoidPvoidPvoid copyFunction, FunctionVo
     }
 	assert(newStack->size != NULL);
     *newStack->size = 0;
-    newStack->list = sList_Init(nodeSize, copyFunction, freeFunction);
+    newStack->list = slist_Init(nodeSize, copyFunction, freeFunction);
     return newStack;
 }
 
@@ -59,7 +59,7 @@ void stack_Pop(Stack *stack, void *retValue) {
     stack_Top(stack, retValue);
     if (stack->size > 0) {
         void *trash = malloc(stack->list->nodeSize);
-        sList_Remove(stack->list, trash);
+        slist_Remove(stack->list, trash);
         --*stack->size;
         free(trash);
     }
@@ -69,7 +69,7 @@ void stack_Pop(Stack *stack, void *retValue) {
 void stack_Pop1(Stack *stack) {
     if (stack->size > 0) {
         void *trash = malloc(stack->list->nodeSize);
-        sList_Remove(stack->list, trash);
+        slist_Remove(stack->list, trash);
         --*stack->size;
         free(trash);
     }
@@ -78,7 +78,7 @@ void stack_Pop1(Stack *stack) {
 
 // puts {newValue} to {stack}
 void stack_Push(Stack *stack, void *newValue) {
-    sList_Add(stack->list, newValue);
+    slist_Add(stack->list, newValue);
     ++*stack->size;
 }
 

@@ -9,61 +9,61 @@
 #include <stdlib.h>
 
 // a common function that returns void and takes void*
-// such functions are used in SList to free nodes
+// such functions are used in Slist to free nodes
 typedef void (*FunctionVoidPvoid)(void*);
 
 // a common function that returns void and takes void*, void*
-// such functions are used in SList to add new nodes (to do deep copies)
+// such functions are used in Slist to add new nodes (to do deep copies)
 typedef void (*FunctionVoidPvoidPvoid)(void*, void*);
 
 // a single list node
-typedef struct _SListNode {
+typedef struct _SlistNode {
 	// pointer to the value
     void *val;
 	// pointer to the next node in the list
-    struct _SListNode *next;
-} SListNode;
+    struct _SlistNode *next;
+} SlistNode;
 
 // a singly linked list
 typedef struct {
 	// size of one node (we need it cause we can't tell what we store in the list)
 	size_t nodeSize;
 	// head node of the list
-	SListNode *head;
+	SlistNode *head;
 	// function that is used to copy node data
 	FunctionVoidPvoidPvoid copyFunc;
 	// function that is used to free nodes
 	FunctionVoidPvoid freeFunc;
-} SList;
+} Slist;
 
 // adds {newValue} to the head of {list}
-void    sList_Add(SList *list, void *newValue);
+void    slist_Add(Slist *list, void *newValue);
 
 // removes all nodes of {list}
-void    sList_Clear(SList *list);
+void    slist_Clear(Slist *list);
 
 // writes a deep copy of {listFrom} to {listTo}
-void    sList_CopyTo(SList *listFrom, SList **listTo);
+void    slist_CopyTo(Slist *listFrom, Slist **listTo);
 
 // releases system resources held by {list}
-void	sList_Dispose(SList *list);
+void	slist_Dispose(Slist *list);
 
 // invokes {function} for each element of {list} (starting from head)
-void    sList_Foreach(SList *list, FunctionVoidPvoid function);
+void    slist_Foreach(Slist *list, FunctionVoidPvoid function);
 
 // initializes and returns a new empty list of node size {nodeSize} which uses {copyFunction} to copy nodes and {freeFunction} to free nodes
-SList*  sList_Init(int nodeSize, FunctionVoidPvoidPvoid copyFunction, FunctionVoidPvoid freeFunction);
+Slist*  slist_Init(int nodeSize, FunctionVoidPvoidPvoid copyFunction, FunctionVoidPvoid freeFunction);
 
 // writes the value of the head node of {list} to {retValue} and then removes the head node
-void	sList_Remove(SList *list, void *retValue);
+void	slist_Remove(Slist *list, void *retValue);
 
 // removes the first occurence of {value} in {list}
-void	sList_RemoveFirstOcc(SList *list, void *value);
+void	slist_RemoveFirstOcc(Slist *list, void *value);
 
 // reverts {list}
-void    sList_Revert(SList **list);
+void    slist_Revert(Slist **list);
 
 // writes the reverted {list} to {result}
-void    sList_RevertTo(SList *list, SList *result);
+void    slist_RevertTo(Slist *list, Slist *result);
 
 #endif

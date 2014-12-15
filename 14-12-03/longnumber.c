@@ -2,47 +2,56 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "slist.h"
 #include "longnumber.h"
 
 const int LONG_NUMBER_BASE = 10; // base of the used numeric system
 
-// a private delegate that is passed to sList_Foreach; prints one digit to stdout
+// a private delegate that is passed to slist_Foreach; prints one digit to stdout
 void printDigit(void *elem) {
     printf("%d", *(int*)(elem));
 }
 
-// a delegate that is passed to SList as a CopyFunction
-void longNumber_CloneDelegate(void *memTo, void *memFrom) {
-    // initializing LongNumber at memTo
-    *(LongNumber**)memTo = longNumber_Init();
+// a delegate that is passed to Slist as a CopyFunction
+void lnum_CloneDelegate(void *memTo, void *memFrom) {
+    // initializing Lnum at memTo
+    *(Lnum**)memTo = lnum_Init();
 
-    LongNumber *lnumFrom = *(LongNumber**)memFrom;
-    LongNumber *lnumTo = *(LongNumber**)memTo;
+    Lnum *lnumFrom = *(Lnum**)memFrom;
+    Lnum *lnumTo = *(Lnum**)memTo;
     
     assert(lnumTo != NULL);
     *lnumTo->sign = *lnumFrom->sign;
-    sList_CopyTo(lnumFrom->digits, &lnumTo->digits); // QUE: will it work?
+    slist_CopyTo(lnumFrom->digits, &lnumTo->digits);
 }
 
-// clears {lnum} to initial state (*digits == empty SList, *sign == 0)
-void longNumber_Clear(LongNumber *lnum) {
+// writes a deep copy of {lnumFrom} to {lnumTo}
+void lnum_CopyTo(Lnum *lnumFrom, Lnum *lnumTo) {
+    assert(lnumFrom != NULL);
+    assert(lnumTo != NULL);
+    *lnumTo->sign = *lnumFrom->sign;
+    slist_CopyTo(lnumFrom->digits, &lnumTo->digits);
+}
+
+// clears {lnum} to initial state (*digits == empty Slist, *sign == 0)
+void lnum_Clear(Lnum *lnum) {
 	assert(lnum != NULL);
-    sList_Clear(lnum->digits);
+    slist_Clear(lnum->digits);
     *lnum->sign = 0;
 }
 
 // adds {digit} to {lnum} as a new least significant digit
-void longNumber_DigitAdd(LongNumber *lnum, int digit) {
+void lnum_DigitAdd(Lnum *lnum, int digit) {
     assert(lnum != NULL);
     int buf = digit;
-    sList_Add(lnum->digits, (void*)&buf);
+    slist_Add(lnum->digits, (void*)&buf);
 }
 
 // deletes leading (most significant) zeroes in {digits}
-void longNumber_DigitsDeleteLeadingZeroes(SList *digits) {
+void lnum_DigitsDeleteLeadingZeroes(Slist *digits) {
     assert(digits != NULL);
-    SListNode *curNode = digits->head->next;
+    SlistNode *curNode = digits->head->next;
     int lastNonZeroIndex = 0, i = 1;
     while (curNode != NULL) {
         if (*(int*)curNode->val) {
@@ -52,7 +61,7 @@ void longNumber_DigitsDeleteLeadingZeroes(SList *digits) {
         curNode = curNode->next;
     }
     curNode = digits->head->next;
-    SListNode *prevNode = digits->head;
+    SlistNode *prevNode = digits->head;
     i = 1;
     while ((curNode != NULL) && (i <= lastNonZeroIndex)) {
         ++i;
@@ -71,8 +80,8 @@ void longNumber_DigitsDeleteLeadingZeroes(SList *digits) {
 }
 
 // returns 1 if {digits1} is less than {digits2} and 0 otherwise
-int longNumber_DigitsIsLess(SList *digits1, SList *digits2) {
-	SListNode *cur1 = digits1->head, *cur2 = digits2->head;
+int lnum_DigitsIsLess(Slist *digits1, Slist *digits2) {
+	SlistNode *cur1 = digits1->head, *cur2 = digits2->head;
     int isFirstLess = 0, val1 = 0, val2 = 0;
     while ((cur1 != NULL) || (cur2 != NULL)) {
         if (cur1 != NULL) {
@@ -97,63 +106,63 @@ int longNumber_DigitsIsLess(SList *digits1, SList *digits2) {
 }
 
 // writes the (not reverted) value of ({digits1} * {digits2}) to {result}
-void longNumber_DigitsMultLongLong(SList *digits1, SList *digits2, SList **result) {
+void lnum_DigitsMultLongLong(Slist *digits1, Slist *digits2, Slist **result) {
     assert(digits1 != NULL);
     assert(digits2 != NULL);
 
-    sList_Clear(*result);
+    slist_Clear(*result);
     int zero = 0;
-    sList_Add(*result, (void*)&zero);
-    SList *localResult = sList_Init(digits1->nodeSize, digits1->copyFunc, digits1->freeFunc);
-    SList *temp = sList_Init(digits1->nodeSize, digits1->copyFunc, digits1->freeFunc);
+    slist_Add(*result, (void*)&zero);
+    Slist *localResult = slist_Init(digits1->nodeSize, digits1->copyFunc, digits1->freeFunc);
+    Slist *temp = slist_Init(digits1->nodeSize, digits1->copyFunc, digits1->freeFunc);
 
-    SListNode *curNode2 = digits2->head;
+    SlistNode *curNode2 = digits2->head;
     int shift = 0, i;
     while (curNode2 != NULL) {
-        longNumber_DigitsMultLongShort(digits1, *(int*)curNode2->val, &localResult);
+        lnum_DigitsMultLongShort(digits1, *(int*)curNode2->val, &localResult);
         for (i = 0; i < shift; ++i) {
-            sList_Add(localResult, (void*)&zero);
+            slist_Add(localResult, (void*)&zero);
         }
-        sList_CopyTo(*result, &temp); 
-        longNumber_DigitsSum(temp, localResult, *result);
-        sList_Revert(result);
+        slist_CopyTo(*result, &temp); 
+        lnum_DigitsSum(temp, localResult, *result);
+        slist_Revert(result);
 
         ++shift;
         curNode2 = curNode2->next;
     }
 
-    sList_Dispose(localResult);
-    sList_Dispose(temp);
+    slist_Dispose(localResult);
+    slist_Dispose(temp);
 }
 
 // writes the (not reverted) value of ({digits} * {num}) to {result}
-void longNumber_DigitsMultLongShort(SList *digits, int num, SList **result) {
-    sList_Clear(*result);
+void lnum_DigitsMultLongShort(Slist *digits, int num, Slist **result) {
+    slist_Clear(*result);
     int carry = 0, buf;
-    SListNode *curDigit = digits->head;
+    SlistNode *curDigit = digits->head;
     while (curDigit != NULL) {
         carry += *(int*)curDigit->val * num;
         buf = carry % LONG_NUMBER_BASE;
-        sList_Add(*result, (void*)&buf);
+        slist_Add(*result, (void*)&buf);
         carry /= LONG_NUMBER_BASE;
         curDigit = curDigit->next;
     }
     if (carry) {
-        sList_Add(*result, (void*)&carry);
+        slist_Add(*result, (void*)&carry);
     }
-    sList_Revert(result);
+    slist_Revert(result);
 }
 
 // writes the reverted value of abs({digits1} - {digits2}) to {result}
-void longNumber_DigitsSub(SList *digits1, SList *digits2, SList *result) {
+void lnum_DigitsSub(Slist *digits1, Slist *digits2, Slist *result) {
 	// if num1 < num2, return (num2 - num1) instead
-    if (longNumber_DigitsIsLess(digits1, digits2)) {
-        longNumber_DigitsSub(digits2, digits1, result);
+    if (lnum_DigitsIsLess(digits1, digits2)) {
+        lnum_DigitsSub(digits2, digits1, result);
         return;
     }
 
-    sList_Clear(result);
-    SListNode *cur1 = digits1->head, *cur2 = digits2->head;
+    slist_Clear(result);
+    SlistNode *cur1 = digits1->head, *cur2 = digits2->head;
     int curDigit = 0, val1 = 0, val2 = 0;
     while ((cur1 != NULL) || (cur2 != NULL)) {
         if (cur1 != NULL) {
@@ -177,17 +186,17 @@ void longNumber_DigitsSub(SList *digits1, SList *digits2, SList *result) {
         }
         if ((curDigit > 0) || (cur1 != NULL)) {
             int temp = curDigit % LONG_NUMBER_BASE;
-            sList_Add(result, (void*)&temp);
+            slist_Add(result, (void*)&temp);
         }        
         curDigit /= LONG_NUMBER_BASE;
     }
     // if result is NULL, then it equals to zero; writing 0
     if (result->head == NULL) {
         int temp = 0;
-        sList_Add(result, (void*)&temp);
+        slist_Add(result, (void*)&temp);
     }
     // deleting leading zeroes (they are in the head for {result} is reverted)
-    SListNode *curHead = result->head;
+    SlistNode *curHead = result->head;
     while ((result->head->next != NULL) && !(*(int*)result->head->val)) {
         curHead = result->head;
         result->head = result->head->next;
@@ -200,9 +209,9 @@ void longNumber_DigitsSub(SList *digits1, SList *digits2, SList *result) {
 }
 
 // writes the reverted value of ({digits1} + {digits2}) to {result}
-void longNumber_DigitsSum(SList *digits1, SList *digits2, SList *result) {
-	sList_Clear(result);
-    SListNode *cur1 = digits1->head, *cur2 = digits2->head;
+void lnum_DigitsSum(Slist *digits1, Slist *digits2, Slist *result) {
+	slist_Clear(result);
+    SlistNode *cur1 = digits1->head, *cur2 = digits2->head;
     int curSum = 0, temp = 0;
     while ((cur1 != NULL) || (cur2 != NULL)) {
         if (cur1 != NULL) {
@@ -214,107 +223,132 @@ void longNumber_DigitsSum(SList *digits1, SList *digits2, SList *result) {
             cur2 = cur2->next;
         }
         temp = curSum % LONG_NUMBER_BASE;
-        sList_Add(result, (void*)&temp);
+        slist_Add(result, (void*)&temp);
         curSum /= LONG_NUMBER_BASE;
     }
     if (curSum) {
         temp = curSum % LONG_NUMBER_BASE;
-        sList_Add(result, (void*)&temp);
+        slist_Add(result, (void*)&temp);
     }
 }
 
 // writes the result of integer division {lnum1} / {lnum2} to {result}
-void longNumber_Div(LongNumber *lnum1, LongNumber *lnum2, LongNumber *result) {
+void lnum_Div(Lnum *lnum1, Lnum *lnum2, Lnum *result) {
     assert(lnum1 != NULL);
     assert(lnum2 != NULL);
-    sList_Clear(result->digits);
+    slist_Clear(result->digits);
     // checking division by zero
     if ((lnum2->digits != NULL)
     && (*(int*)lnum2->digits->head->val == 0)
     && (lnum2->digits->head->next == NULL)) {
         *result->sign = 0;
         int zero = 0;
-        sList_Add(result->digits, (void*)&zero);
+        slist_Add(result->digits, (void*)&zero);
         return;
     }
-    // QUE: -2 / 5 == 0 or -2 / 5 == -1 ???
-    if (longNumber_DigitsIsLess(lnum1->digits, lnum2->digits)) {
-        *result->sign = 0;
-        int zero = 0;
-        sList_Add(result->digits, (void*)&zero);
-        return;
+    
+    // +3 / 7 == 0
+    int decFlag = *lnum1->sign; // EPIC CRUTCH
+
+    if (lnum_DigitsIsLess(lnum1->digits, lnum2->digits)) {
+        if (*lnum1->sign) {
+            *result->sign = *lnum1->sign ^ *lnum2->sign;
+            int one = 1;
+            slist_Add(result->digits, (void*)&one);
+            return;
+        }
+        else {
+            *result->sign = 0;
+            int zero = 0;
+            slist_Add(result->digits, (void*)&zero);
+            return;
+        }
     }
-    // QUE: what is the result of division by negative or by a bigger number? now it's done in a lazy way
+    
     *result->sign = *lnum1->sign ^ *lnum2->sign;
     
     // initializing temp vars
-    SList *divisibleReverted = sList_Init(lnum1->digits->nodeSize,
+    Slist *divisibleReverted = slist_Init(lnum1->digits->nodeSize,
         lnum1->digits->copyFunc, lnum1->digits->freeFunc);
-    SList *buf = sList_Init(divisibleReverted->nodeSize, divisibleReverted->copyFunc,
+    Slist *buf = slist_Init(divisibleReverted->nodeSize, divisibleReverted->copyFunc,
         divisibleReverted->freeFunc);
-    SList *temp = sList_Init(divisibleReverted->nodeSize, divisibleReverted->copyFunc,
+    Slist *temp = slist_Init(divisibleReverted->nodeSize, divisibleReverted->copyFunc,
         divisibleReverted->freeFunc);
 
-    sList_RevertTo(lnum1->digits, divisibleReverted);
+    slist_RevertTo(lnum1->digits, divisibleReverted);
 
-    SListNode *curNode = divisibleReverted->head;
+    SlistNode *curNode = divisibleReverted->head;
     int subCount;
     while (curNode != NULL) {
 
-        while ((buf->head == NULL) || (longNumber_DigitsIsLess(buf, lnum2->digits))) {
-            sList_Add(buf, curNode->val);
+        while ((buf->head == NULL) || (lnum_DigitsIsLess(buf, lnum2->digits))) {
+            slist_Add(buf, curNode->val);
             curNode = curNode->next;
         }
 
         subCount = 0;
-        while (!longNumber_DigitsIsLess(buf, lnum2->digits)) {
+        while (!lnum_DigitsIsLess(buf, lnum2->digits)) {
             // QUE: how do I make this orthodoxial? There are too many memory operations
-            sList_CopyTo(buf, &temp);
+            slist_CopyTo(buf, &temp);
 
-            longNumber_DigitsSub(temp, lnum2->digits, buf);
-            sList_Revert(&buf);
+            lnum_DigitsSub(temp, lnum2->digits, buf);
+            slist_Revert(&buf);
             subCount++;
         }
 
-        sList_Add(result->digits, (void*)&subCount);
+        slist_Add(result->digits, (void*)&subCount);
+    }
+    
+    // if lnum1 < 0, decrement result by 1 (to follow algebra rules)
+    if (decFlag) {
+        Lnum *one = lnum_Init();
+        int t = 1;
+        slist_Add(one->digits, (void*)&t);
+        
+        Lnum *tempL = lnum_Init();
+        lnum_CopyTo(result, tempL);
+        lnum_Sub(tempL, one, result);
+        
+        lnum_Dispose(tempL);
+        lnum_Dispose(one);
     }
 
     // freeing memory
-    sList_Dispose(temp);
-    sList_Dispose(buf);
-    sList_Dispose(divisibleReverted);
+    slist_Dispose(temp);
+    slist_Dispose(buf);
+    slist_Dispose(divisibleReverted);
 }
 
 // releases memory held by {lnum}
-void longNumber_Dispose(LongNumber *lnum) {
+void lnum_Dispose(Lnum *lnum) {
     if (lnum == NULL) {
         return;
     }
-    sList_Dispose(lnum->digits);
+    slist_Dispose(lnum->digits);
     free(lnum->sign);
     free(lnum);
 }
 
-// a delegate that is passed to SList as a FreeFunction
-void longNumber_DisposeDelegate(void *lnum) {
+// a delegate that is passed to Slist as a FreeFunction
+void lnum_DisposeDelegate(void *lnum) {
     assert(lnum != NULL);
-    longNumber_Dispose(*(LongNumber**)lnum);
+    lnum_Dispose(*(Lnum**)lnum);
 }
 
 // changes the sign of {lnum} to opposite
-void longNumber_DoNeg(LongNumber *lnum) {
+void lnum_DoNeg(Lnum *lnum) {
 	*lnum->sign = !(*lnum->sign);
 }
 
-// creates and returns an empty LongNumber
-LongNumber* longNumber_Init() {
-	LongNumber *temp = (LongNumber*)malloc(sizeof(LongNumber));
+// creates and returns an empty Lnum
+Lnum* lnum_Init() {
+	Lnum *temp = (Lnum*)malloc(sizeof(Lnum));
     if (temp == NULL) {
-        fprintf(stderr, "Error: not enough memory to create a LongNumber!\n");
+        fprintf(stderr, "Error: not enough memory to create a Lnum!\n");
         return NULL;
     }
 	assert(temp != NULL);
-    temp->digits = sList_Init(sizeof(int), NULL, NULL);
+    temp->digits = slist_Init(sizeof(int), NULL, NULL);
     temp->sign = malloc(sizeof(int));
     if (temp->sign == NULL) {
         fprintf(stderr, "Error: not enough memory to create an int!\n");
@@ -326,48 +360,48 @@ LongNumber* longNumber_Init() {
 }
 
 // writes the product of {lnum1} and {lnum2} to {result}
-void longNumber_Mult(LongNumber *lnum1, LongNumber *lnum2, LongNumber *result) {
-    longNumber_Clear(result);
+void lnum_Mult(Lnum *lnum1, Lnum *lnum2, Lnum *result) {
+    lnum_Clear(result);
     *result->sign = *lnum1->sign ^ *lnum2->sign;
-    longNumber_DigitsMultLongLong(lnum1->digits, lnum2->digits, &result->digits);
+    lnum_DigitsMultLongLong(lnum1->digits, lnum2->digits, &result->digits);
 }
 
 // prints {lnum} to stdio as decimal integer
-void longNumber_Print(LongNumber *lnum) {
+void lnum_Print(Lnum *lnum) {
     assert(lnum->sign != NULL);
     assert(lnum->digits != NULL);
     if (*lnum->sign) {
         printf("-");
     }
-    SList *revDigits = sList_Init(lnum->digits->nodeSize, lnum->digits->copyFunc,
+    Slist *revDigits = slist_Init(lnum->digits->nodeSize, lnum->digits->copyFunc,
         lnum->digits->freeFunc);
-    sList_RevertTo(lnum->digits, revDigits);
-    sList_Foreach(revDigits, printDigit);
-    sList_Dispose(revDigits);
+    slist_RevertTo(lnum->digits, revDigits);
+    slist_Foreach(revDigits, printDigit);
+    slist_Dispose(revDigits);
 }
 
 // writes the difference between {lnum1} and {lnum2} to {result}
-void longNumber_Sub(LongNumber *lnum1, LongNumber *lnum2, LongNumber *result) {
-	longNumber_DoNeg(lnum2);
-    longNumber_Sum(lnum1, lnum2, result);
-    longNumber_DoNeg(lnum2);
+void lnum_Sub(Lnum *lnum1, Lnum *lnum2, Lnum *result) {
+	lnum_DoNeg(lnum2);
+    lnum_Sum(lnum1, lnum2, result);
+    lnum_DoNeg(lnum2);
 }
 
 // writes the sum of {lnum1} and {lnum2} to {result}
-void longNumber_Sum(LongNumber *lnum1, LongNumber *lnum2, LongNumber *result) {
-	longNumber_Clear(result);
+void lnum_Sum(Lnum *lnum1, Lnum *lnum2, Lnum *result) {
+	lnum_Clear(result);
     if (*lnum1->sign == *lnum2->sign) {
         *result->sign = *lnum1->sign;
-        longNumber_DigitsSum(lnum1->digits, lnum2->digits, result->digits);
+        lnum_DigitsSum(lnum1->digits, lnum2->digits, result->digits);
     }
     else {
-        if (longNumber_DigitsIsLess(lnum1->digits, lnum2->digits)) {
+        if (lnum_DigitsIsLess(lnum1->digits, lnum2->digits)) {
             *result->sign = *lnum2->sign;
         }
         else {
             *result->sign = *lnum1->sign;
         }
-        longNumber_DigitsSub(lnum1->digits, lnum2->digits, result->digits);
+        lnum_DigitsSub(lnum1->digits, lnum2->digits, result->digits);
     }
-    sList_Revert(&result->digits);
+    slist_Revert(&result->digits);
 }

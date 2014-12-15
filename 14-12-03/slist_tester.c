@@ -33,8 +33,8 @@ int main(int argc, char **argv) {
         }
     }
 	
-	// creating SList<int>
-	SList *list = sList_Init(sizeof(int), NULL, NULL);
+	// creating Slist<int>
+	Slist *list = slist_Init(sizeof(int), NULL, NULL);
 
     char curCommand = 0;
     int arg;
@@ -47,15 +47,15 @@ int main(int argc, char **argv) {
         switch (curCommand) {
             case 'a':
                 scanf("%d", &arg);
-                sList_Add(list, (void*)(&arg));
+                slist_Add(list, (void*)(&arg));
                 break;
             case 'p':
-                sList_Foreach(list, printInt);
+                slist_Foreach(list, printInt);
                 printf("\n");
                 break;
             case 'r':
                 scanf("%d", &arg);
-                sList_RemoveFirstOcc(list, (void*)(&arg));
+                slist_RemoveFirstOcc(list, (void*)(&arg));
                 break;
             default:
                 break;
@@ -66,7 +66,7 @@ int main(int argc, char **argv) {
     }
 	
     // freeing memory
-    sList_Dispose(list);
+    slist_Dispose(list);
     if (DEBUG) {
         printf("List cleared.\n");
     }

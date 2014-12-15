@@ -12,22 +12,22 @@
 #define OPER_TYPE_MUL 2
 #define OPER_TYPE_DIV 3
 
-const int IS_INTERFACE_ENABLED = 1;
-const int IS_PRINTING_STACK = 1;
+const int IS_INTERFACE_ENABLED = 0;
+const int IS_PRINTING_STACK = 0;
 const int ARITHM_BASE = 10;
 const char MAX_DIGIT_CHAR = '9';
 
 Stack *stack;
-LongNumber *curNumber;
-LongNumber *buf1, *buf2, *buf3;
+Lnum *curNumber;
+Lnum *buf1, *buf2, *buf3;
 
 void printStack() {
     printf("--------------[\n");
     if (stack->size > 0) {
-        SListNode *curNode = stack->list->head;
+        SlistNode *curNode = stack->list->head;
         while (curNode != NULL) {
             printf("--------------{");
-            longNumber_Print(*(LongNumber**)curNode->val);
+            lnum_Print(*(Lnum**)curNode->val);
             printf("}\n");
             curNode = curNode->next;
         }
@@ -39,41 +39,22 @@ int doOperation(int opType) {
     if (*stack->size < 2) {
         return -1;
     }
-    longNumber_Dispose(buf1);
-    longNumber_Dispose(buf2);
-    longNumber_Clear(buf3);
+    lnum_Dispose(buf1);
+    lnum_Dispose(buf2);
+    lnum_Clear(buf3);
 
     stack_Pop(stack, (void*)&buf2);
     stack_Pop(stack, (void*)&buf1);
 
-/*    // TODO: remove debug section    */
-/*    stack_Top(stack, (void*)&buf2);*/
-/*    printf("buf2: {");*/
-/*    longNumber_Print(buf2);*/
-/*    printf("}\n");*/
-/*    */
-/*    stack_Pop1(stack);*/
-/*    printf("Stack after popping one:\n");*/
-/*    printStack();*/
-/*    printf("buf2: {");*/
-/*    longNumber_Print(buf2);*/
-/*    printf("}\n");*/
-/*    */
-/*    stack_Top(stack, (void*)&buf1);*/
-/*    printf("buf1: {");*/
-/*    longNumber_Print(buf1);*/
-/*    printf("}\n");*/
-/*    stack_Pop1(stack);*/
-
     switch (opType) {
         case OPER_TYPE_SUM:
-            longNumber_Sum(buf1, buf2, buf3);
+            lnum_Sum(buf1, buf2, buf3);
             break;
         case OPER_TYPE_SUB:
-            longNumber_Sub(buf1, buf2, buf3);
+            lnum_Sub(buf1, buf2, buf3);
             break;
         case OPER_TYPE_MUL:
-            longNumber_Mult(buf1, buf2, buf3);
+            lnum_Mult(buf1, buf2, buf3);
             break;
         case OPER_TYPE_DIV:
             // checking division by zero
@@ -82,7 +63,7 @@ int doOperation(int opType) {
             && (buf2->digits->head->next == NULL)) {
                 return -2;
             }
-            longNumber_Div(buf1, buf2, buf3);
+            lnum_Div(buf1, buf2, buf3);
             break;
         default:
             return -3;
@@ -95,19 +76,19 @@ int doOperation(int opType) {
 }
 
 void memFree() {
-    longNumber_Dispose(buf1);
-    longNumber_Dispose(buf2);
-    longNumber_Dispose(buf3);
-    longNumber_Dispose(curNumber);
+    lnum_Dispose(buf1);
+    lnum_Dispose(buf2);
+    lnum_Dispose(buf3);
+    lnum_Dispose(curNumber);
     stack_Dispose(stack);
 }
 
 int main() {
-    stack = stack_Init(sizeof(LongNumber*), longNumber_CloneDelegate, longNumber_DisposeDelegate);
-    curNumber = longNumber_Init();
-    buf1 = longNumber_Init();
-    buf2 = longNumber_Init();
-    buf3 = longNumber_Init();
+    stack = stack_Init(sizeof(Lnum*), lnum_CloneDelegate, lnum_DisposeDelegate);
+    curNumber = lnum_Init();
+    buf1 = lnum_Init();
+    buf2 = lnum_Init();
+    buf3 = lnum_Init();
 
     if (IS_INTERFACE_ENABLED) {
         printf("Welcome to the Great Stack Calculator!\n");
@@ -116,8 +97,6 @@ int main() {
         printf("Type '=' to print the calculated value and exit.\n");
     }
 
-    printStack();
-
     int isReadingNumber = 0;
     char c;
     scanf("%c", &c);
@@ -125,7 +104,7 @@ int main() {
     while (c != '=') {
         // digit
         if ((c >= '0') && (c <= MAX_DIGIT_CHAR)) {
-            longNumber_DigitAdd(curNumber, c - '0');
+            lnum_DigitAdd(curNumber, c - '0');
             isReadingNumber = 1;
         }
 
@@ -139,16 +118,17 @@ int main() {
             }
             scanf("%c", &c);
             if ((c >= '0') && (c <= MAX_DIGIT_CHAR)) { // negative int
-                longNumber_Clear(curNumber);
-                longNumber_DoNeg(curNumber);
-                longNumber_DigitAdd(curNumber, c - '0');
+                lnum_Clear(curNumber);
+                lnum_DoNeg(curNumber);
+                lnum_DigitAdd(curNumber, c - '0');
                 isReadingNumber = 1;
             }
             else if ((c == ' ') || (c == '\n')) { // subtraction
                 int errorCode = doOperation(OPER_TYPE_SUB);
                 if (errorCode) {
                     fprintf(stderr,
-                        "Error: invalid input commands (subtraction crashed: %d); aborting...\n", errorCode);
+                        "Error: invalid input commands (subtraction crashed: %d); aborting...\n",
+                        errorCode);
                     memFree();
            		    return -1;
                 }
@@ -214,25 +194,7 @@ int main() {
             if (isReadingNumber) {
                 isReadingNumber = 0;                
                 stack_Push(stack, (void*)&curNumber);
-                
-/*                // debug section TODO remove*/
-/*                LongNumber *temp = longNumber_Init();*/
-/*                stack_Top(stack, (void*)&temp);*/
-/*                printf("Stack top: {");*/
-/*                longNumber_Print(temp);*/
-/*                printf("}\n");*/
-/*                longNumber_Dispose(temp);*/
-                
-                longNumber_Clear(curNumber);
-                
-/*                // debug section TODO remove*/
-/*                LongNumber *temp = longNumber_Init();*/
-/*                stack_Top(stack, (void*)&temp);*/
-/*                printf("Stack top after clearing curNumber: {");*/
-/*                longNumber_Print(temp);*/
-/*                printf("}\n");*/
-/*                longNumber_Dispose(temp);*/
-                
+                lnum_Clear(curNumber);
                 if (IS_PRINTING_STACK) {
                     printStack();
                 }
@@ -252,7 +214,7 @@ int main() {
     if (*stack->size == 1) {
         // printing the answer
         stack_Pop(stack, (void*)&curNumber);
-        longNumber_Print(curNumber);
+        lnum_Print(curNumber);
         printf("\n");
     }
     else {

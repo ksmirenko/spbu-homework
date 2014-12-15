@@ -13,8 +13,8 @@
 typedef struct {
     // current size of the stack
     int *size;
-    // SList where the stack content is actually stored
-    SList *list;
+    // Slist where the stack content is actually stored
+    Slist *list;
 } Stack;
 
 // clears {stack}
