@@ -1,5 +1,6 @@
 /*
     Stack calculator (long numbers).
+    Call format: <launcher> [<input file> [<output file>]]
     Author: Kirill Smirenko, group 171
 */
 
@@ -22,17 +23,19 @@ Lnum *curNumber;
 Lnum *buf1, *buf2, *buf3;
 
 void printStack() {
-    printf("--------------[\n");
+    fprintf(stderr, "--------------STACK:\n");
+    fprintf(stderr, "--------------[\n");
     if (stack->size > 0) {
         SlistNode *curNode = stack->list->head;
         while (curNode != NULL) {
-            printf("--------------{");
-            lnum_Print(*(Lnum**)curNode->val);
-            printf("}\n");
+            fprintf(stderr, "--------------{");
+            lnum_PrintDebug(*(Lnum**)curNode->val);
+            fprintf(stderr, "}\n");
             curNode = curNode->next;
         }
     }
-    printf("--------------]\n");
+    fprintf(stderr, "--------------]\n");
+    fprintf(stderr, "--------------\n");
 }
 
 int doOperation(int opType) {
@@ -83,7 +86,20 @@ void memFree() {
     stack_Dispose(stack);
 }
 
-int main() {
+int main(int argc, char **argv) {
+    // opening files, if needed
+    FILE *fileIn = NULL, *fileOut = NULL;
+    if (argc > 1) {
+        fileIn = freopen(argv[1], "r", stdin);
+        if (fileIn == NULL) {
+            fprintf(stderr, "File IO error.\n");
+            return -1;
+        }
+    }
+    if (argc > 2) {
+        fileOut = freopen(argv[2], "w", stdout);
+    }
+    
     stack = stack_Init(sizeof(Lnum*), lnum_CloneDelegate, lnum_DisposeDelegate);
     curNumber = lnum_Init();
     buf1 = lnum_Init();
@@ -101,7 +117,12 @@ int main() {
     char c;
     scanf("%c", &c);
     // main loop
+//    while (scanf("%c", &c) != EOF) {
     while (c != '=') {
+        if (c == '=') {
+            break;
+        }
+        
         // digit
         if ((c >= '0') && (c <= MAX_DIGIT_CHAR)) {
             lnum_DigitAdd(curNumber, c - '0');
@@ -207,7 +228,7 @@ int main() {
             memFree();
             return -1;
         }
-
+        
         scanf("%c", &c);
     }
     
@@ -222,5 +243,13 @@ int main() {
     }
 
     memFree();
+    
+    // closing files
+    if (fileIn) {
+        fclose(fileIn);
+    }
+    if (fileOut) {
+        fclose(fileOut);
+    }
     return 0;
 }

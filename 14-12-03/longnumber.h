@@ -64,8 +64,11 @@ Lnum*   lnum_Init();
 // writes the product of {lnum1} and {lnum2} to {result}
 void    lnum_Mult(Lnum *lnum1, Lnum *lnum2, Lnum *result);
 
-// prints {lnum} to stdio as decimal integer
+// prints {lnum} to stdout as decimal integer
 void    lnum_Print(Lnum *lnum);
+
+// prints {lnum} to stderr as decimal integer
+void    lnum_PrintDebug(Lnum *lnum);
 
 // writes the difference between {lnum1} and {lnum2} to {result}
 void    lnum_Sub(Lnum *lnum1, Lnum *lnum2, Lnum *result);

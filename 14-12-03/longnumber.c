@@ -13,6 +13,11 @@ void printDigit(void *elem) {
     printf("%d", *(int*)(elem));
 }
 
+// a private delegate that is passed to slist_Foreach; prints one digit to stderr
+void printDigitDebug(void *elem) {
+    fprintf(stderr, "%d", *(int*)(elem));
+}
+
 // a delegate that is passed to Slist as a CopyFunction
 void lnum_CloneDelegate(void *memTo, void *memFrom) {
     // initializing Lnum at memTo
@@ -248,7 +253,7 @@ void lnum_Div(Lnum *lnum1, Lnum *lnum2, Lnum *result) {
     }
     
     // +3 / 7 == 0
-    int decFlag = *lnum1->sign; // EPIC CRUTCH
+    int decFlag = *lnum1->sign; // EPIC HACK
 
     if (lnum_DigitsIsLess(lnum1->digits, lnum2->digits)) {
         if (*lnum1->sign) {
@@ -279,23 +284,25 @@ void lnum_Div(Lnum *lnum1, Lnum *lnum2, Lnum *result) {
 
     SlistNode *curNode = divisibleReverted->head;
     int subCount;
+    int addZeroesFlag = 0, illegalHack = 0; // HACK
     while (curNode != NULL) {
-
+        subCount = 0;
         while ((buf->head == NULL) || (lnum_DigitsIsLess(buf, lnum2->digits))) {
             slist_Add(buf, curNode->val);
             curNode = curNode->next;
+            if (addZeroesFlag && illegalHack) {
+                slist_Add(result->digits, (void*)&subCount);
+            }
+            illegalHack = 1;
         }
-
-        subCount = 0;
         while (!lnum_DigitsIsLess(buf, lnum2->digits)) {
-            // QUE: how do I make this orthodoxial? There are too many memory operations
+            addZeroesFlag = 1;
             slist_CopyTo(buf, &temp);
-
             lnum_DigitsSub(temp, lnum2->digits, buf);
             slist_Revert(&buf);
             subCount++;
         }
-
+        illegalHack = 0;
         slist_Add(result->digits, (void*)&subCount);
     }
     
@@ -366,8 +373,12 @@ void lnum_Mult(Lnum *lnum1, Lnum *lnum2, Lnum *result) {
     lnum_DigitsMultLongLong(lnum1->digits, lnum2->digits, &result->digits);
 }
 
-// prints {lnum} to stdio as decimal integer
+// prints {lnum} to stdout as decimal integer
 void lnum_Print(Lnum *lnum) {
+    if (lnum == NULL) {
+        printf("NULL");
+        return;
+    }
     assert(lnum->sign != NULL);
     assert(lnum->digits != NULL);
     if (*lnum->sign) {
@@ -377,6 +388,24 @@ void lnum_Print(Lnum *lnum) {
         lnum->digits->freeFunc);
     slist_RevertTo(lnum->digits, revDigits);
     slist_Foreach(revDigits, printDigit);
+    slist_Dispose(revDigits);
+}
+
+// prints {lnum} to stderr as decimal integer
+void lnum_PrintDebug(Lnum *lnum) {
+    if (lnum == NULL) {
+        fprintf(stderr, "NULL");
+        return;
+    }
+    assert(lnum->sign != NULL);
+    assert(lnum->digits != NULL);
+    if (*lnum->sign) {
+        fprintf(stderr, "-");
+    }
+    Slist *revDigits = slist_Init(lnum->digits->nodeSize, lnum->digits->copyFunc,
+        lnum->digits->freeFunc);
+    slist_RevertTo(lnum->digits, revDigits);
+    slist_Foreach(revDigits, printDigitDebug);
     slist_Dispose(revDigits);
 }
 
