@@ -4,6 +4,7 @@
     Author: Kirill Smirenko, group 171
 */
 
+#include <assert.h>
 #include <stdio.h>
 #include "stack.h"
 #include "longnumber.h"
@@ -28,9 +29,8 @@ void printStack() {
     if (stack->size > 0) {
         SlistNode *curNode = stack->list->head;
         while (curNode != NULL) {
-            fprintf(stderr, "--------------{");
+            fprintf(stderr, "--------------");
             lnum_PrintDebug(*(Lnum**)curNode->val);
-            fprintf(stderr, "}\n");
             curNode = curNode->next;
         }
     }
@@ -100,6 +100,7 @@ int main(int argc, char **argv) {
         fileOut = freopen(argv[2], "w", stdout);
     }
     
+    // allocating memory
     stack = stack_Init(sizeof(Lnum*), lnum_CloneDelegate, lnum_DisposeDelegate);
     curNumber = lnum_Init();
     buf1 = lnum_Init();
@@ -117,7 +118,7 @@ int main(int argc, char **argv) {
     char c;
     scanf("%c", &c);
     // main loop
-//    while (scanf("%c", &c) != EOF) {
+//    while (scanf("%c", &c) != EOF) { // TODO: fix
     while (c != '=') {
         if (c == '=') {
             break;
@@ -234,6 +235,7 @@ int main(int argc, char **argv) {
     
     if (*stack->size == 1) {
         // printing the answer
+        lnum_Dispose(curNumber);
         stack_Pop(stack, (void*)&curNumber);
         lnum_Print(curNumber);
         printf("\n");

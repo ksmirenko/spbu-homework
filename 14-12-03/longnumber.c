@@ -18,6 +18,18 @@ void printDigitDebug(void *elem) {
     fprintf(stderr, "%d", *(int*)(elem));
 }
 
+// debug function that prints SList as a number
+void printDigitsDebug(Slist *digits) {
+    assert(digits != NULL);
+    fprintf(stderr, "{");
+    Slist *revDigits = slist_Init(digits->nodeSize, digits->copyFunc,
+        digits->freeFunc);
+    slist_RevertTo(digits, revDigits);
+    slist_Foreach(revDigits, printDigitDebug);
+    slist_Dispose(revDigits);
+    fprintf(stderr, "}\n");
+}
+
 // a delegate that is passed to Slist as a CopyFunction
 void lnum_CloneDelegate(void *memTo, void *memFrom) {
     // initializing Lnum at memTo
@@ -281,32 +293,48 @@ void lnum_Div(Lnum *lnum1, Lnum *lnum2, Lnum *result) {
         divisibleReverted->freeFunc);
 
     slist_RevertTo(lnum1->digits, divisibleReverted);
-
     SlistNode *curNode = divisibleReverted->head;
     int subCount;
-    int addZeroesFlag = 0, illegalHack = 0; // HACK
+    int passedLeadingZeroes = 0;
+    
+    // the process of division
     while (curNode != NULL) {
+        // adding next digit
+        slist_Add(buf, curNode->val);
+        curNode = curNode->next;
+
         subCount = 0;
-        while ((buf->head == NULL) || (lnum_DigitsIsLess(buf, lnum2->digits))) {
-            slist_Add(buf, curNode->val);
-            curNode = curNode->next;
-            if (addZeroesFlag && illegalHack) {
-                slist_Add(result->digits, (void*)&subCount);
+        if (lnum_DigitsIsLess(buf, lnum2->digits)) {
+            // can't subtract
+            if (passedLeadingZeroes) {
+                slist_Add(result->digits, (void*)&subCount);              
             }
-            illegalHack = 1;
         }
-        while (!lnum_DigitsIsLess(buf, lnum2->digits)) {
-            addZeroesFlag = 1;
-            slist_CopyTo(buf, &temp);
-            lnum_DigitsSub(temp, lnum2->digits, buf);
-            slist_Revert(&buf);
-            subCount++;
+        else {
+            // can subtract
+            // subtracting while we can
+            while (!lnum_DigitsIsLess(buf, lnum2->digits)) {
+                slist_CopyTo(buf, &temp);
+                lnum_DigitsSub(temp, lnum2->digits, buf);
+                slist_Revert(&buf);
+                subCount++;
+            }
+            // writing subCount to result
+            slist_Add(result->digits, (void*)&subCount);
+            // if buf == {0}, making buf {}
+            if ((*(int*)buf->head->val == 0)
+            && (buf->head->next == NULL)) {
+                int trash;
+                slist_Remove(buf, (void*)&trash);
+            }
+            // saying that there will be no more leading zeroes in result
+            if (!passedLeadingZeroes) {
+                passedLeadingZeroes = 1;
+            }
         }
-        illegalHack = 0;
-        slist_Add(result->digits, (void*)&subCount);
     }
     
-    // if lnum1 < 0, decrement result by 1 (to follow algebra rules)
+    // if lnum1 < 0, decrementing result by 1 (to follow algebra rules)
     if (decFlag) {
         Lnum *one = lnum_Init();
         int t = 1;
@@ -399,6 +427,7 @@ void lnum_PrintDebug(Lnum *lnum) {
     }
     assert(lnum->sign != NULL);
     assert(lnum->digits != NULL);
+    fprintf(stderr, "{");
     if (*lnum->sign) {
         fprintf(stderr, "-");
     }
@@ -407,6 +436,7 @@ void lnum_PrintDebug(Lnum *lnum) {
     slist_RevertTo(lnum->digits, revDigits);
     slist_Foreach(revDigits, printDigitDebug);
     slist_Dispose(revDigits);
+    fprintf(stderr, "}\n");
 }
 
 // writes the difference between {lnum1} and {lnum2} to {result}
