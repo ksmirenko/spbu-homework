@@ -14,6 +14,11 @@
 #define OPER_TYPE_MUL 2
 #define OPER_TYPE_DIV 3
 
+#define ERR_DIV_BY_ZERO     -1
+#define ERR_NOT_ENOUGH_ARGS -2
+#define ERR_UNKNOWN_COMMAND -3
+#define ERR_LOL             -4
+
 const int IS_INTERFACE_ENABLED = 0;
 const int IS_PRINTING_STACK = 0;
 const int ARITHM_BASE = 10;
@@ -22,8 +27,24 @@ const char MAX_DIGIT_CHAR = '9';
 Stack *stack;
 Lnum *curNumber;
 Lnum *buf1, *buf2, *buf3;
+FILE *fileIn, *fileOut;
 
 void printStack() {
+    fprintf(stdout, "[");
+    if (stack->size > 0) {
+        SlistNode *curNode = stack->list->head;
+        while (curNode != NULL) {
+            lnum_Print(*(Lnum**)curNode->val);
+            curNode = curNode->next;
+            if (curNode != NULL) {
+                fprintf(stdout, "; ");
+            }
+        }
+    }
+    fprintf(stdout, "]\n");
+}
+
+void printStackDebug() {
     fprintf(stderr, "--------------STACK:\n");
     fprintf(stderr, "--------------[\n");
     if (stack->size > 0) {
@@ -40,14 +61,14 @@ void printStack() {
 
 int doOperation(int opType) {
     if (*stack->size < 2) {
-        return -1;
+        return ERR_NOT_ENOUGH_ARGS;
     }
     lnum_Dispose(buf1);
     lnum_Dispose(buf2);
     lnum_Clear(buf3);
 
-    stack_Pop(stack, (void*)&buf2);
     stack_Pop(stack, (void*)&buf1);
+    stack_Pop(stack, (void*)&buf2);
 
     switch (opType) {
         case OPER_TYPE_SUM:
@@ -64,16 +85,16 @@ int doOperation(int opType) {
             if ((buf2->digits != NULL)
             && (*(int*)buf2->digits->head->val == 0)
             && (buf2->digits->head->next == NULL)) {
-                return -2;
+                return ERR_DIV_BY_ZERO;
             }
             lnum_Div(buf1, buf2, buf3);
             break;
         default:
-            return -3;
+            return ERR_LOL;
     }
     stack_Push(stack, (void*)&buf3);
     if (IS_PRINTING_STACK) {
-        printStack();
+        printStackDebug();
     }
     return 0;
 }
@@ -84,16 +105,23 @@ void memFree() {
     lnum_Dispose(buf3);
     lnum_Dispose(curNumber);
     stack_Dispose(stack);
+    // closing files
+    if (fileIn != NULL) {
+        fclose(fileIn);
+    }
+    if (fileOut != NULL) {
+        fclose(fileOut);
+    }
 }
 
 int main(int argc, char **argv) {
+    fileIn = NULL, fileOut = NULL;
     // opening files, if needed
-    FILE *fileIn = NULL, *fileOut = NULL;
     if (argc > 1) {
         fileIn = freopen(argv[1], "r", stdin);
         if (fileIn == NULL) {
             fprintf(stderr, "File IO error.\n");
-            return -1;
+            return ERR_LOL;
         }
     }
     if (argc > 2) {
@@ -115,13 +143,18 @@ int main(int argc, char **argv) {
     }
 
     int isReadingNumber = 0;
-    char c;
-    scanf("%c", &c);
+    char c = getchar();
     // main loop
-//    while (scanf("%c", &c) != EOF) { // TODO: fix
-    while (c != '=') {
+    while (c != EOF) {
         if (c == '=') {
-            break;
+            if (*stack->size > 0) {
+                lnum_Print(*(Lnum**)stack->list->head->val);
+            }
+            else {
+                fprintf(stdout, "Not enough arguments\n");
+                memFree();
+                return 1;
+            }
         }
         
         // digit
@@ -133,10 +166,9 @@ int main(int argc, char **argv) {
         // subtraction or beginning of a negative int
         else if (c == '-') {
             if (isReadingNumber) {
-                fprintf(stderr, "Error: incorrect input format; aborting...\n");
-                fprintf(stderr, "(\tgot symbol '%c' while reading a number)", c);
+                fprintf(stdout, "Unknown command\n");
                 memFree();
-           		return -1;
+           		return 1;
             }
             scanf("%c", &c);
             if ((c >= '0') && (c <= MAX_DIGIT_CHAR)) { // negative int
@@ -148,66 +180,87 @@ int main(int argc, char **argv) {
             else if ((c == ' ') || (c == '\n')) { // subtraction
                 int errorCode = doOperation(OPER_TYPE_SUB);
                 if (errorCode) {
-                    fprintf(stderr,
-                        "Error: invalid input commands (subtraction crashed: %d); aborting...\n",
-                        errorCode);
+                    switch (errorCode) {
+                        case ERR_NOT_ENOUGH_ARGS:
+                            fprintf(stdout, "Not enough arguments\n");
+                            break;
+                        default:
+                            fprintf(stdout, "Unknown error, lol\n");
+                    }
                     memFree();
-           		    return -1;
+               		return 1;
                 }
             }
             else { // something erroneous
-                fprintf(stderr, "Error: incorrect input format; aborting...\n");
-                fprintf(stderr, "(\tgot symbol '%c' after '-')", c);
+                fprintf(stdout, "Unknown command\n");
                 memFree();
-           		return -1;
+           		return 1;
             }
         }
 
         // addition
         else if (c == '+') {
             if (isReadingNumber) {
-                fprintf(stderr, "Error: incorrect input format; aborting...\n");
-                fprintf(stderr, "(\tgot symbol '%c' while reading a number)", c);
+                fprintf(stdout, "Unknown command\n");
                 memFree();
-           		return -1;
+           		return 1;
             }
             int errorCode = doOperation(OPER_TYPE_SUM);
             if (errorCode) {
-                fprintf(stderr, "Error: invalid input commands (addition crashed); aborting...\n");
+                switch (errorCode) {
+                    case ERR_NOT_ENOUGH_ARGS:
+                        fprintf(stdout, "Not enough arguments\n");
+                        break;
+                    default:
+                        fprintf(stdout, "Unknown error, lol\n");
+                }
                 memFree();
-           		return -1;
+           		return 1;
             }
         }
 
         // multiplication
         else if (c == '*') {
             if (isReadingNumber) {
-                fprintf(stderr, "Error: incorrect input format; aborting...\n");
-                fprintf(stderr, "(\tgot symbol '%c' while reading a number)", c);
+                fprintf(stdout, "Unknown command\n");
                 memFree();
-           		return -1;
+           		return 1;
             }
             int errorCode = doOperation(OPER_TYPE_MUL);
             if (errorCode) {
-                fprintf(stderr, "Error: invalid input commands (multiplication crashed); aborting...\n");
+                switch (errorCode) {
+                    case ERR_NOT_ENOUGH_ARGS:
+                        fprintf(stdout, "Not enough arguments\n");
+                        break;
+                    default:
+                        fprintf(stdout, "Unknown error, lol\n");
+                }
                 memFree();
-           		return -1;
+           		return 1;
             }
         }
         
         // division
         else if (c == '/') {
             if (isReadingNumber) {
-                fprintf(stderr, "Error: incorrect input format; aborting...\n");
-                fprintf(stderr, "(\tgot symbol '%c' while reading a number)", c);
+                fprintf(stdout, "Unknown command\n");
                 memFree();
-           		return -1;
+           		return 1;
             }
-            int errorCode = doOperation(OPER_TYPE_DIV);
+            int errorCode = doOperation(OPER_TYPE_DIV);       
             if (errorCode) {
-                fprintf(stderr, "Error: invalid input commands (division crashed); aborting...\n");
+                switch (errorCode) {
+                    case ERR_NOT_ENOUGH_ARGS:
+                        fprintf(stdout, "Not enough arguments\n");
+                        break;
+                    case ERR_DIV_BY_ZERO:
+                        fprintf(stdout, "Division by zero\n");
+                        break;
+                    default:
+                        fprintf(stdout, "Unknown error, lol\n");
+                }
                 memFree();
-           		return -1;
+           		return 1;
             }
         }
 
@@ -218,40 +271,24 @@ int main(int argc, char **argv) {
                 stack_Push(stack, (void*)&curNumber);
                 lnum_Clear(curNumber);
                 if (IS_PRINTING_STACK) {
-                    printStack();
+                    printStackDebug();
                 }
             }
         }
 
         // got something erroneous
         else {
-            fprintf(stderr, "Error: incorrect symbol '%c'; aborting...\n", c);
+            fprintf(stdout, "Unknown command\n");
             memFree();
-            return -1;
+            return 1;
         }
         
-        scanf("%c", &c);
+        c = getchar();
     }
     
-    if (*stack->size == 1) {
-        // printing the answer
-        lnum_Dispose(curNumber);
-        stack_Pop(stack, (void*)&curNumber);
-        lnum_Print(curNumber);
-        printf("\n");
-    }
-    else {
-        fprintf(stderr, "Error: invalid input commands.\n");
-    }
+    // after-loop output
+    printStack();
 
     memFree();
-    
-    // closing files
-    if (fileIn) {
-        fclose(fileIn);
-    }
-    if (fileOut) {
-        fclose(fileOut);
-    }
     return 0;
 }

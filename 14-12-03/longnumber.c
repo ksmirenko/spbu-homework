@@ -263,9 +263,6 @@ void lnum_Div(Lnum *lnum1, Lnum *lnum2, Lnum *result) {
         slist_Add(result->digits, (void*)&zero);
         return;
     }
-    
-    // +3 / 7 == 0
-    int decFlag = *lnum1->sign; // EPIC HACK
 
     if (lnum_DigitsIsLess(lnum1->digits, lnum2->digits)) {
         if (*lnum1->sign) {
@@ -334,15 +331,15 @@ void lnum_Div(Lnum *lnum1, Lnum *lnum2, Lnum *result) {
         }
     }
     
-    // if lnum1 < 0, decrementing result by 1 (to follow algebra rules)
-    if (decFlag) {
+    // if lnum1 < 0, incrementing result modulo by 1 (to follow algebra rules)
+    if (*lnum1->sign) {
         Lnum *one = lnum_Init();
-        int t = 1;
-        slist_Add(one->digits, (void*)&t);
+        *one->sign = !*lnum2->sign;
+        lnum_DigitAdd(one, 1);
         
         Lnum *tempL = lnum_Init();
         lnum_CopyTo(result, tempL);
-        lnum_Sub(tempL, one, result);
+        lnum_Sum(tempL, one, result);
         
         lnum_Dispose(tempL);
         lnum_Dispose(one);
