@@ -1,0 +1,9 @@
+# input & output files
+*.out
+*.in
+
+# launch files
+*.l
+
+# test files
+*/tests/*.*
