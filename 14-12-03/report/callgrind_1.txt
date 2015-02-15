@@ -1,0 +1,32 @@
+$ callgrind_annotate callgrind.out.2302 | grep -v "???"
+--------------------------------------------------------------------------------
+Profile data file 'callgrind.out.2302' (creator: callgrind-3.9.0)
+--------------------------------------------------------------------------------
+I1 cache: 
+D1 cache: 
+LL cache: 
+Timerange: Basic block 0 - 3479018
+Trigger: Program termination
+Profiled target:  ./launch.l test.in test.out (PID 2302, part 1)
+Events recorded:  Ir
+Events shown:     Ir
+Event sort order: Ir
+Thresholds:       99
+Include dirs:     
+User annotated:   
+Auto-annotation:  off
+
+--------------------------------------------------------------------------------
+        Ir 
+--------------------------------------------------------------------------------
+15,007,043  PROGRAM TOTALS
+
+--------------------------------------------------------------------------------
+       Ir  file:function
+--------------------------------------------------------------------------------
+1,460,690  slist.c:slist_Add [/home/Delgado/spbu-homework/14-12-03/launch.l]
+  708,270  slist.c:slist_Clear [/home/Delgado/spbu-homework/14-12-03/launch.l]
+  198,250  slist.c:slist_RevertTo [/home/Delgado/spbu-homework/14-12-03/launch.l]
+  193,911  longnumber.c:lnum_DigitsSum [/home/Delgado/spbu-homework/14-12-03/launch.l]
+   47,182  longnumber.c:lnum_DigitsMultLongLong [/home/Delgado/spbu-homework/14-12-03/launch.l]
+   43,524  slist.c:slist_Add'2 [/home/Delgado/spbu-homework/14-12-03/launch.l]
