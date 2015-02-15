@@ -120,7 +120,7 @@ int main(int argc, char **argv) {
     if (argc > 1) {
         fileIn = freopen(argv[1], "r", stdin);
         if (fileIn == NULL) {
-            fprintf(stderr, "File IO error.\n");
+            fprintf(stderr, "File IO error: invalid file name '%s'\n", argv[1]);
             return ERR_LOL;
         }
     }
@@ -149,6 +149,7 @@ int main(int argc, char **argv) {
         if (c == '=') {
             if (*stack->size > 0) {
                 lnum_Print(*(Lnum**)stack->list->head->val);
+                printf("\n");
             }
             else {
                 fprintf(stdout, "Not enough arguments\n");
@@ -158,7 +159,7 @@ int main(int argc, char **argv) {
         }
         
         // digit
-        if ((c >= '0') && (c <= MAX_DIGIT_CHAR)) {
+        else if ((c >= '0') && (c <= MAX_DIGIT_CHAR)) {
             lnum_DigitAdd(curNumber, c - '0');
             isReadingNumber = 1;
         }
@@ -170,14 +171,14 @@ int main(int argc, char **argv) {
                 memFree();
            		return 1;
             }
-            scanf("%c", &c);
+            c = getchar();
             if ((c >= '0') && (c <= MAX_DIGIT_CHAR)) { // negative int
                 lnum_Clear(curNumber);
                 lnum_DoNeg(curNumber);
                 lnum_DigitAdd(curNumber, c - '0');
                 isReadingNumber = 1;
             }
-            else if ((c == ' ') || (c == '\n')) { // subtraction
+            else if ((c == ' ') || (c == '\n') || (c == EOF)) { // subtraction
                 int errorCode = doOperation(OPER_TYPE_SUB);
                 if (errorCode) {
                     switch (errorCode) {

@@ -212,6 +212,7 @@ void lnum_DigitsSub(Slist *digits1, Slist *digits2, Slist *result) {
         int temp = 0;
         slist_Add(result, (void*)&temp);
     }
+    
     // deleting leading zeroes (they are in the head for {result} is reverted)
     SlistNode *curHead = result->head;
     while ((result->head->next != NULL) && !(*(int*)result->head->val)) {
@@ -221,6 +222,7 @@ void lnum_DigitsSub(Slist *digits1, Slist *digits2, Slist *result) {
 	    if(result->freeFunc) {
 		    result->freeFunc(curHead->val);
 	    }
+	    free(curHead->val); // THIS ONE
 	    free(curHead);
     }
 }

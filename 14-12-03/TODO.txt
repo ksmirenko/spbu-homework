@@ -1,1 +1,0 @@
-prepare testers (slist, longnum, calc-s) for automatic testing (including EoF etc)
