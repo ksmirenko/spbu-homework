@@ -1,0 +1,146 @@
+Отчёт об анализе утечек памяти и профилировании стекового калькулятора
+Выполнил: Кирилл Смиренко, группа 171
+
+
+Особенность написанного мной стекового калькулятора в том, что я реализовал generic list [Slist] и эту структуру данных использовал как для хранения одного длинного числа, так и для стека длинных чисел. Теоретически, Slist может использоваться с любыми типами данных.
+
+В процессе работы я использовал виртуальную ОС Fedora 20 (64 bit, хост тоже 64 bit), текстовый редактор gedit, компилятор gcc, утилиты valgrind и gprof.
+
+Нахождением и исправлением утечек памяти я занимался параллельно с разработкой каждого модуля, поэтому к моменту зачётного тестирования все основные "дыры" были устранены. Самой грубой из ошибок, дающей большие утечки памяти, была неверная реализация процедур освобождения памяти, занимаемой написанными мной сложными структурами (generic list, long number). В результате пришлось для каждого объекта 'типа' Slist хранить указатель не только на процедуру копирования его узлов, но и на процедуру удаления узлов.
+
+На финальном тестировании выявилась ещё одна утечка памяти - на одном из тестов. Входные данные теста: [a a = -], где a - число длиной 1580 знаков. Отчёт valgrind-а:
+$ valgrind ./launch.l test10.txt test10_student.txt
+==18758== Memcheck, a memory error detector
+==18758== Copyright (C) 2002-2013, and GNU GPL'd, by Julian Seward et al.
+==18758== Using Valgrind-3.9.0 and LibVEX; rerun with -h for copyright info
+==18758== Command: ./launch.l test10.txt test10_student.txt
+==18758== 
+==18758== 
+==18758== HEAP SUMMARY:
+==18758==     in use at exit: 12,624 bytes in 1,578 blocks
+==18758==   total heap usage: 37,972 allocs, 36,394 frees, 455,976 bytes allocated
+==18758== 
+==18758== LEAK SUMMARY:
+==18758==    definitely lost: 12,624 bytes in 1,578 blocks
+==18758==    indirectly lost: 0 bytes in 0 blocks
+==18758==      possibly lost: 0 bytes in 0 blocks
+==18758==    still reachable: 0 bytes in 0 blocks
+==18758==         suppressed: 0 bytes in 0 blocks
+==18758== Rerun with --leak-check=full to see details of leaked memory
+==18758== 
+==18758== For counts of detected and suppressed errors, rerun with: -v
+==18758== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 2 from 2)
+
+Анализ работы кода на различных данных показал, что утечка памяти происходит при вычитании модулей чисел, которые равны, кроме последнего разряда, если длина этих чисел не меньше 3. Размер утечки памяти пропорционален длине чисел. Пример сообщения valgrind-а для минимального случая утечки (длина чисел три):
+$ valgrind ./launch.l test.in test.out
+==19098== Memcheck, a memory error detector
+==19098== Copyright (C) 2002-2013, and GNU GPL'd, by Julian Seward et al.
+==19098== Using Valgrind-3.9.0 and LibVEX; rerun with -h for copyright info
+==19098== Command: ./launch.l test.in test.out
+==19098== 
+==19098== 
+==19098== HEAP SUMMARY:
+==19098==     in use at exit: 8 bytes in 1 blocks
+==19098==   total heap usage: 124 allocs, 123 frees, 1,800 bytes allocated
+==19098== 
+==19098== LEAK SUMMARY:
+==19098==    definitely lost: 8 bytes in 1 blocks
+==19098==    indirectly lost: 0 bytes in 0 blocks
+==19098==      possibly lost: 0 bytes in 0 blocks
+==19098==    still reachable: 0 bytes in 0 blocks
+==19098==         suppressed: 0 bytes in 0 blocks
+==19098== Rerun with --leak-check=full to see details of leaked memory
+==19098== 
+==19098== For counts of detected and suppressed errors, rerun with: -v
+==19098== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 2 from 2)
+
+
+По данному отчёту можно предположить, что "утекает" по 8 байт (машинное слово) на каждую цифру числа, кроме первых двух. Последовательная отладка различных модулей проекта посредством дебагового вывода помогла выявить место ошибки - это был участок кода, отвечающий за удаление ведущих нулей результата вычитания модулей чисел:
+SlistNode *curHead = result->head;
+while ((result->head->next != NULL) && !(*(int*)result->head->val)) {
+    curHead = result->head;
+    result->head = result->head->next;
+    // freeing curHead
+    if(result->freeFunc) {
+	    result->freeFunc(curHead->val);
+    }
+    free(curHead->val); // эта строка отсутствовала, что вызывало утечку
+    free(curHead);
+}
+
+Дальнейшее тестирование утечек памяти не выявило.
+
+
+Профилирование я проводил утилитами valgrind (инструментом callgrind) и gprof. Для контрольного измерения был взят тест, содержащий всего 7 команд, но среди них - все арифметические операции и число длины 100. Полученные отчёты слишком громоздки, поэтому привожу наиболее показательных их части:
+
+callgrind:
+<...>
+--------------------------------------------------------------------------------
+        Ir 
+--------------------------------------------------------------------------------
+15,007,043  PROGRAM TOTALS
+
+--------------------------------------------------------------------------------
+       Ir  file:function
+--------------------------------------------------------------------------------
+1,460,690  slist.c:slist_Add [/home/Delgado/spbu-homework/14-12-03/launch.l]
+  708,270  slist.c:slist_Clear [/home/Delgado/spbu-homework/14-12-03/launch.l]
+  198,250  slist.c:slist_RevertTo [/home/Delgado/spbu-homework/14-12-03/launch.l]
+  193,911  longnumber.c:lnum_DigitsSum [/home/Delgado/spbu-homework/14-12-03/launch.l]
+   47,182  longnumber.c:lnum_DigitsMultLongLong [/home/Delgado/spbu-homework/14-12-03/launch.l]
+   43,524  slist.c:slist_Add'2 [/home/Delgado/spbu-homework/14-12-03/launch.l]
+   
+   
+gprof:
+<...>
+  %   cumulative   self              self     total           
+ time   seconds   seconds    calls  Ts/call  Ts/call  name    
+  0.00      0.00     0.00    18966     0.00     0.00  slist_Add
+  0.00      0.00     0.00     3160     0.00     0.00  lnum_DigitAdd
+  0.00      0.00     0.00     1581     0.00     0.00  printDigit
+  0.00      0.00     0.00       37     0.00     0.00  slist_Clear
+  0.00      0.00     0.00       18     0.00     0.00  slist_Dispose
+  0.00      0.00     0.00       18     0.00     0.00  slist_Init
+  0.00      0.00     0.00       13     0.00     0.00  slist_RevertTo
+<...>
+index % time    self  children    called     name
+[1]      0.0    0.00    0.00      36+31      <cycle 1 as a whole> [1]
+                0.00    0.00      37             slist_Clear <cycle 1> [6]
+                0.00    0.00      18             slist_Dispose <cycle 1> [7]
+                0.00    0.00       9             lnum_Dispose <cycle 1> [10]
+                0.00    0.00       3             lnum_DisposeDelegate <cycle 1> [16]
+-----------------------------------------------
+[2]      0.0    0.00    0.00    4747+14248   <cycle 2 as a whole> [2]
+                0.00    0.00   18966             slist_Add <cycle 2> [3]
+                0.00    0.00      13             slist_RevertTo <cycle 2> [9]
+                0.00    0.00       6             slist_Revert <cycle 2> [12]
+                0.00    0.00       5             lnum_CloneDelegate <cycle 2> [13]
+                0.00    0.00       5             slist_CopyTo <cycle 2> [14]
+-----------------------------------------------
+                               14224             slist_RevertTo <cycle 2> [9]
+                0.00    0.00       3/4747        stack_Push [17]
+                0.00    0.00    1579/4747        lnum_DigitsSub [26]
+                0.00    0.00    3160/4747        lnum_DigitAdd [4]
+[3]      0.0    0.00    0.00   18966         slist_Add <cycle 2> [3]
+                                   3             lnum_CloneDelegate <cycle 2> [13]
+-----------------------------------------------
+                0.00    0.00    3160/3160        main [47]
+[4]      0.0    0.00    0.00    3160         lnum_DigitAdd [4]
+                0.00    0.00    3160/4747        slist_Add <cycle 2> [3]
+-----------------------------------------------
+<...>
+
+(Примечание: к сожалению, попытки настроить gprof для мониторинга времени, затраченного на функции, не привели к результату; тем не менее, для общего понимания профиля достаточно показателей количества вызовов и графа вызовов).
+Как видно из отчётов, наибольшее процессорное время тратится на функцию slist_Add, отвечающую за добавление узла в односвязный список и связанную с выделением памяти. Также среди прочих "выделяются" функции:
+* slist_Clear (очистка списка, освобождение памяти),
+* slist_RevertTo (глубокое копирование списка),
+* lnum_DigitsSum (сложение модулей двух чисел),
+* lnum_DigitAdd ("дописывание" цифры к длинному числу; реализация сводится к вызову slist_Add)
+
+Граф вызовов, построенный gprof-ом, в совокупности со статистикой вызовов явно показывает "бутылочное горло" всего проекта, а именно - частое использование временных переменных-списков при арифметических вычислениях и, как следствие, большое количество вызовов выделения, копирования и освобождение памяти.
+
+Предполагаемые пути оптимизации:
+* отказаться от постоянного глубокого копирования длинных чисел и перейти в некоторых местах к копированию только ссылок на большие структуры (с реализацией reference counting-а для предотвращения утечек памяти);
+* пересмотреть логику арифметических операций с целью уменьшения количества операций с памятью.
+
+Таким образом, в процессе анализа использования памяти и времени выполнения посредством профилирования были исправлены утечки памяти, выявлены "узкие места" программы, занимающие основную часть процессорного времени; предложены пути оптимизации. Сама оптимизация при глобальном подходе предположительно затронет бóльшую часть проекта и выходит за рамки данного аналитического задания.
