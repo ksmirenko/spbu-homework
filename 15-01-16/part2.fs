@@ -1,98 +1,123 @@
-﻿// Задачи 5-8 от 16 февраля (про двоичное дерево)
+﻿// Задачи 14-19 от 2 марта
 // Автор: Кирилл Смиренко, группа 171
+// Расчётное время выполнения: 2 часа
+// Действительное время выполнения: 2 часа
 
-// Описание:
-//    Инструкции для программы передаются в параметрах запуска в формате:
-//      "i <число>" - вставить число
-//      "r <число>" - удалить число, если оно есть
-//      "p <формат> [Z]" -
-//          вывести текущее дерево в строку на экран в указанном формате (LCR/CLR/LRC)
-//          можно добавить через пробел букву Z, тогда пустые узлы будут напечатаны в виде 'X'
-//    Пример параметров запуска:
-//      i 6 i 2 i 7 i 4 i 3 i 1 i 5 p CLR Z r 2 p LRC
+// сравнение произвольных значений (используя Option)
+let minElem a b =
+  match a with
+  | None -> Some b
+  | Some a -> Some (min a b)
 
-open System
+// задание 14 (полиморфное дерево)
+type Tree<'A> =
+  | Empty
+  | Node of 'A * Tree<'A> * Tree<'A>
 
-type bsTree =
-  | EmptyTree
-  | TreeNode of int * bsTree * bsTree
+// задание 15 (полиморфный map для дерева)
+let rec map f tree =
+  match tree with
+  | Empty -> Empty
+  | Node(v, l, r) -> Node(f v, map f l, map f r)
 
+// задание 16 (полиморфный fold для дерева)
+let rec fold f acc tree  =
+  match tree with
+  | Empty -> acc
+  | Node(v, l, r) -> fold f (fold f (f acc v) l) r
+
+// вставка элемента в дерево
 let rec insert i t =
   match i, t with
-  | i, EmptyTree -> TreeNode(i, EmptyTree, EmptyTree)
-  | i, TreeNode(c, l, r) ->
-    if i = c then TreeNode(c, l, r)
-    else if i < c then TreeNode(c, insert i l, r)
-    else TreeNode(c, l, insert i r)
+  | i, Empty -> Node(i, Empty, Empty)
+  | i, Node(c, l, r) ->
+    match compare i c with
+    | x when x < 0 -> Node(c, insert i l, r)
+    | x when x > 0 -> Node(c, l, insert i r)
+    | _ -> t
 
-let rec findLeft t =
-  match t with
-  | EmptyTree -> 0
-  | TreeNode(c, EmptyTree, _) ->
-    c
-  | TreeNode(c, l, _) -> findLeft l
-
+// удаление узла с указанным значением из дерева
 let rec remove i t =
   match i, t with
-  | _, EmptyTree -> EmptyTree
-  | i, TreeNode(c, l, r) ->
-    if i < c then TreeNode(c, remove i l, r)
-    else if i > c then TreeNode(c, l, remove i r)
+  | _, Empty -> Empty
+  | i, Node(c, l, r) ->
+    if i < c then Node(c, remove i l, r)
+    else if i > c then Node(c, l, remove i r)
     else
       match l, r with
-      | EmptyTree, EmptyTree -> EmptyTree
-      | TreeNode(c1, l1, r1), EmptyTree -> TreeNode(c1, l1, r1)
-      | EmptyTree, TreeNode(c2, l2, r2) -> TreeNode(c2, l2, r2)
-      | l, TreeNode(c2, EmptyTree, r2) -> TreeNode(c2, l, r2)
-      | l, TreeNode(c2, l2, r2) ->
-          let dl = findLeft l2
-          TreeNode(dl, l, remove dl (TreeNode(c2, l2, r2)))
+      | Empty, Empty -> Empty
+      | _, Empty -> l
+      | Empty, _ -> r
+      | l, Node(c2, Empty, r2) -> Node(c2, l, r2)
+      | l, Node(c2, l2, r2) ->
+          let dl = fold minElem None l2
+          Node(dl.Value, l, remove dl.Value (Node(c2, l2, r2)))
 
+// вывод дерева на экран в указанном формате
 let rec printTree t mode z =
   match t with
-  | EmptyTree ->
+  | Empty ->
     match z with
     | "yes" ->
       printf "X "
       ()
     | _ -> ()
-  | TreeNode(c, l, r) ->
+  | Node(c, l, r) ->
     match mode with
     | "LCR" ->
       printTree l mode z
-      printf "%d " c
+      printf "%A " c
       printTree r mode z
     | "LRC" ->
       printTree l mode z
       printTree r mode z
-      printf "%d " c
+      printf "%A " c
     | "CLR" ->
-      printf "%d " c
+      printf "%A " c
       printTree l mode z
       printTree r mode z
     | _ -> ()
 
-let rec loop tree argv =
-  match argv with
-  | [] -> 0
-  | "i" :: n :: rest -> 
-    match Int32.TryParse(n) with
-    | (true, n) -> loop (insert n tree) rest
-    | (false, _) -> -1
-  | "r" :: n :: rest ->
-    match Int32.TryParse(n) with
-    | (true, n) -> loop (remove n tree) rest
-    | (false, _) -> -1
-  | "p" :: m :: "Z" :: rest ->
-    printTree tree m "yes"
-    printf "\n"
-    loop tree rest
-  | "p" :: m :: rest ->
-    printTree tree m "no"
-    printf "\n"
-    loop tree rest
-  | _ -> -1
+// создание дерева из списка
+let makeTree l =
+  List.fold (fun t n -> insert n t) Empty l
+
+// вывод дерева на экран в стандартном формате
+let printTreeCLRZ t =
+  printTree t "CLR" "yes"
 
 [<EntryPoint>]
-let main argv = 
-  loop EmptyTree (argv |> Array.toList)
+let main argv =
+  let t1 = makeTree [6; 2; 7; 4; 3; 1; 5]
+  let t2 = makeTree ["bbb"; "bab"; "c"; "abb"; "aa"; "abc"; "bbbc"; "bba"; "ca"]
+  printfn "Тестовые деревья (все выводятся C-L-R с пустыми листьями): "
+  printTreeCLRZ t1
+  printfn ""
+  printTreeCLRZ t2
+  printfn "\n"
+
+  printfn "Тест удаления из численного дерева:"
+  printTreeCLRZ (remove 2 t1)
+  printfn "\n"
+
+  printfn "15. Замена элементов численного дерева на противоположные:"
+  printTreeCLRZ (map (fun a -> -a) t1)
+  printfn "\n"
+
+  printfn "16. Суммарная длина всех символов строкового дерева: %A\n"
+    (fold (fun acc elem -> acc + String.length elem) 0 t2)
+
+  // задание 17: сумма значений в дереве (fold)
+  printfn "17. Сумма значений в численном дереве: %A\n"
+    (fold (fun acc elem -> acc + elem) 0 t1)
+
+  // задание 18: поиск минимума в дереве (fold)
+  printfn "18. Минимум в строковом дереве: %A\n"
+    (fold minElem None t2)
+
+  // задание 18: копирование дерева (fold)
+  printfn "19. Копирование численного дерева:"
+  printTreeCLRZ (fold (fun cln node -> insert node cln) Empty t1)
+  printfn "\n"
+
+  0
