@@ -3,16 +3,34 @@
 // Расчётное время выполнения: 2 часа
 // Действительное время выполнения: 2 часа
 
-// сравнение произвольных значений (используя Option)
-let minElem a b =
-  match a with
-  | None -> Some b
-  | Some a -> Some (min a b)
-
 // задание 14 (полиморфное дерево)
 type Tree<'A> =
   | Empty
   | Node of 'A * Tree<'A> * Tree<'A>
+
+// вставка элемента в дерево
+let rec insert i t =
+  match i, t with
+  | i, Empty -> Node(i, Empty, Empty)
+  | i, Node(c, l, r) ->
+    match compare i c with
+    | x when x < 0 -> Node(c, insert i l, r)
+    | x when x > 0 -> Node(c, l, insert i r)
+    | _ -> t
+
+// создание дерева из списка
+let makeTree l =
+  List.fold (fun t n -> insert n t) Empty l
+
+// вывод дерева на экран
+let rec printTreeCLRZ t =
+  match t with
+  | Empty ->
+      printf "X "
+  | Node(c, l, r) ->
+      printf "%A " c
+      printTreeCLRZ l
+      printTreeCLRZ r
 
 // задание 15 (полиморфный map для дерева)
 let rec map f tree =
@@ -26,65 +44,11 @@ let rec fold f acc tree  =
   | Empty -> acc
   | Node(v, l, r) -> fold f (fold f (f acc v) l) r
 
-// вставка элемента в дерево
-let rec insert i t =
-  match i, t with
-  | i, Empty -> Node(i, Empty, Empty)
-  | i, Node(c, l, r) ->
-    match compare i c with
-    | x when x < 0 -> Node(c, insert i l, r)
-    | x when x > 0 -> Node(c, l, insert i r)
-    | _ -> t
-
-// удаление узла с указанным значением из дерева
-let rec remove i t =
-  match i, t with
-  | _, Empty -> Empty
-  | i, Node(c, l, r) ->
-    if i < c then Node(c, remove i l, r)
-    else if i > c then Node(c, l, remove i r)
-    else
-      match l, r with
-      | Empty, Empty -> Empty
-      | _, Empty -> l
-      | Empty, _ -> r
-      | l, Node(c2, Empty, r2) -> Node(c2, l, r2)
-      | l, Node(c2, l2, r2) ->
-          let dl = fold minElem None l2
-          Node(dl.Value, l, remove dl.Value (Node(c2, l2, r2)))
-
-// вывод дерева на экран в указанном формате
-let rec printTree t mode z =
-  match t with
-  | Empty ->
-    match z with
-    | "yes" ->
-      printf "X "
-      ()
-    | _ -> ()
-  | Node(c, l, r) ->
-    match mode with
-    | "LCR" ->
-      printTree l mode z
-      printf "%A " c
-      printTree r mode z
-    | "LRC" ->
-      printTree l mode z
-      printTree r mode z
-      printf "%A " c
-    | "CLR" ->
-      printf "%A " c
-      printTree l mode z
-      printTree r mode z
-    | _ -> ()
-
-// создание дерева из списка
-let makeTree l =
-  List.fold (fun t n -> insert n t) Empty l
-
-// вывод дерева на экран в стандартном формате
-let printTreeCLRZ t =
-  printTree t "CLR" "yes"
+// сравнение произвольных значений (используя Option)
+let minElem a b =
+  match a with
+  | None -> Some b
+  | Some a -> Some (min a b)
 
 [<EntryPoint>]
 let main argv =
@@ -94,10 +58,6 @@ let main argv =
   printTreeCLRZ t1
   printfn ""
   printTreeCLRZ t2
-  printfn "\n"
-
-  printfn "Тест удаления из численного дерева:"
-  printTreeCLRZ (remove 2 t1)
   printfn "\n"
 
   printfn "15. Замена элементов численного дерева на противоположные:"
