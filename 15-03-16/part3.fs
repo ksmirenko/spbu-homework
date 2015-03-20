@@ -1,13 +1,13 @@
-﻿// Задачи 27-29 Zот 16 марта
+﻿// Задачи 27-29 от 16 марта
 // Автор: Кирилл Смиренко, группа 171
-// Расчётное время выполнения: 2 часа (с 2:00)
-// Действительное время выполнения: 
+// Расчётное время выполнения: 2 часа
+// Действительное время выполнения: 3 часа
 
 // 27. Интерфейс для полиморфного списка
 type ICList<'A when 'A : equality> =
   interface
-    abstract HeadValue   : unit          -> Option<'A>
-    abstract Length      : unit          -> int
+    abstract HeadValue   : Option<'A> with get
+    abstract Length      : int with get
     abstract AddHead     : 'A            -> ICList<'A>
     abstract AddTail     : 'A            -> ICList<'A>
     abstract AddBefore   : 'A            -> int         -> ICList<'A>
@@ -34,18 +34,18 @@ type CListAdt<'A when 'A : equality>(h : Node<'A>, s : int) =
       | N(_, Empty) -> l
       | N(_, n) -> tail n
 
-    new() = CListAdt<'A>(Empty, 0)
-    new(v : 'A) = CListAdt<'A>(N(v, Empty), 1)
+    new() = CListAdt(Empty, 0)
+    new(v : 'A) = CListAdt(N(v, Empty), 1)
 
     member this.HeadNode = head
 
     interface ICList<'A> with
-      member this.HeadValue () =
-        match head with
-        | Empty -> None
-        | N(v, _) -> Some v
-      member this.Length () =
-        length
+      member this.HeadValue
+        with get () =
+          match head with
+          | Empty -> None
+          | N(v, _) -> Some v
+      member this.Length with get () = length
       member this.AddHead v =
         new CListAdt<'A>(N(v, head), length + 1) :> ICList<'A>
       member this.AddTail v =
@@ -55,8 +55,8 @@ type CListAdt<'A when 'A : equality>(h : Node<'A>, s : int) =
           | N(v', n') -> N(v', at n' v)
         CListAdt(at head v, length + 1) :> ICList<'A>
       member this.AddBefore v i =
-        if i > length then
-          (this :> ICList<'A>).AddTail v
+        if (i < 0) || (i >= length) then
+          failwith "Index out of range!"
         else
           let rec ab node v index =
             match node with
@@ -78,8 +78,8 @@ type CListAdt<'A when 'A : equality>(h : Node<'A>, s : int) =
           | N(vl, nxt) -> N(vl, rt nxt)
         CListAdt(rt head, max (length - 1) 0) :> ICList<'A>
       member this.RemoveAt i =
-        if i >= length then
-          this :> ICList<'A>
+        if (i < 0) || (i >= length) then
+          failwith "Index out of range!"
         elif i = 0 then
           (this :> ICList<'A>).RemoveHead()
         elif i = length - 1 then
@@ -102,14 +102,14 @@ type CListAdt<'A when 'A : equality>(h : Node<'A>, s : int) =
         fnd head
       member this.ConcatWith l =
         let rec toNode (l : ICList<'A>) =
-          match l.Length() with
+          match l.Length with
           | 0 -> Empty
-          | _ -> N(l.HeadValue().Value, toNode (l.RemoveHead()))
+          | _ -> N(l.HeadValue.Value, toNode (l.RemoveHead()))
         let rec cw n n' =
           match n with
           | Empty -> n'
           | N(v, n'') -> N(v, cw n'' n')
-        CListAdt((cw head (toNode l)), (length + l.Length())) :> ICList<'A>
+        CListAdt((cw head (toNode l)), (length + l.Length)) :> ICList<'A>
 
     override this.ToString() =
       let rec itos n =
@@ -121,34 +121,123 @@ type CListAdt<'A when 'A : equality>(h : Node<'A>, s : int) =
   end
 
 // 29. Реализация интерфейса списка на массиве
+type CListArray<'A when 'A : equality>(arr : 'A []) =
+  class
+    let array = arr
+    let length = array.Length
+
+    let wrap v =
+      Array.create 1 v
+
+    new() = CListArray<'A>(Array.empty<'A>)
+    new(v : 'A) = CListArray<'A>(Array.create 1 v)
+
+    interface ICList<'A> with
+      member this.HeadValue
+        with get () =
+          match array with
+          | [||] -> None
+          | _ -> Some array.[0]
+      member this.Length with get () = length
+      member this.AddHead v =
+        CListArray<'A>(Array.append (wrap v) array) :> ICList<'A>
+      member this.AddTail v =
+        CListArray<'A>(Array.append array (wrap v)) :> ICList<'A>
+      member this.AddBefore v i =
+        if (i < 0) || (i >= length) then
+          failwith "Index out of range!"
+        else
+          let a =
+            Array.append
+              (Array.append (Array.sub array 0 i) (wrap v))
+                (Array.sub array i (length - i + 1))
+          CListArray<'A>(a) :> ICList<'A>
+      member this.RemoveHead () =
+        match length with
+        | 0 -> this :> ICList<'A>
+        | _ -> CListArray<'A>(Array.sub array 1 (length - 1)) :> ICList<'A>
+      member this.RemoveTail () =
+        match length with
+        | 0 -> this :> ICList<'A>
+        | _ -> CListArray<'A>(Array.sub array 0 (length - 1)) :> ICList<'A>
+      member this.RemoveAt i =
+        if (i < 0) || (i >= length) then
+          failwith "Index out of range!"
+        else
+          match length with
+          | 0 -> this :> ICList<'A>
+          | _ ->
+            let a =
+              Array.append (Array.sub array 0 (i - 1)) 
+                (Array.sub array i (length - i))
+            CListArray<'A>(a) :> ICList<'A>
+      member this.Find func =
+        Array.tryFind func array
+      member this.ConcatWith l =
+        let rec toArr (l : ICList<'A>) =
+          match l.Length with
+          | 0 -> [||]
+          | _ -> Array.append (wrap l.HeadValue.Value) (toArr (l.RemoveHead()))
+        CListArray<'A>(Array.append array (toArr l)) :> ICList<'A>
+
+    override this.ToString() =
+      array.ToString()
+  end
 
 [<EntryPoint>]
 let main argv =
-  printfn "28. Реализация интерфейса списка на АТД. Демонстрация:"
+  printfn "28. Реализация интерфейса списка на АТД:"
   let mutable l1 = CListAdt<int>(3) :> ICList<int>;
   printfn "l1 = %A" l1
-  printfn "> AddHead 1 // a"
+  printfn "// a\n> AddHead 1"
   l1 <- l1.AddHead 1
-  printfn "l1 = %A\n> AddTail 4 // b" l1
+  printfn "l1 = %A\n// b\n> AddTail 4" l1
   l1 <- l1.AddTail 4
-  printfn "l1 = %A\n> AddBefore 2 1 // c" l1
+  printfn "l1 = %A\n// c\n> AddBefore 2 1" l1
   l1 <- l1.AddBefore 2 1
   printfn "l1 = %A\n> AddBefore 0 0" l1
   l1 <- l1.AddBefore 0 0
-  printfn "l1 = %A\n> AddBefore 5 6" l1
-  l1 <- l1.AddBefore 5 6
-  printfn "l1 = %A\n> RemoveHead() // d" l1
+  printfn "l1 = %A\n> AddTail 5" l1
+  l1 <- l1.AddTail 5
+  printfn "l1 = %A\n// d\n> RemoveHead()" l1
   l1 <- l1.RemoveHead()
-  printfn "l1 = %A\n> RemoveTail() // e" l1
+  printfn "l1 = %A\n// e\n> RemoveTail()" l1
   l1 <- l1.RemoveTail()
-  printfn "l1 = %A\n> RemoveAt 1 // f" l1
+  printfn "l1 = %A\n// f\n> RemoveAt 1" l1
   l1 <- l1.RemoveAt 1
-  printfn "l1 = %A\n> let mutable l2 = l1.RemoveAt 3" l1
-  let mutable l2 = l1.RemoveAt 3
-  printfn "l2 = %A" l2
-  printfn ">l2.Find ((=) 3) // g\n%A"  (l2.Find ((=) 3))
-  printfn "> l1 <- l1.ConcatWith l2 // h"
-  l1 <- l1.ConcatWith l2
+  printfn "l1 = %A\n> let mutable l1' = l1.RemoveAt 2" l1
+  let mutable l1' = l1.RemoveAt 2
+  printfn "l1' = %A" l1'
+  printfn "// g\n> l1'.Find ((=) 3)\n%A"  (l1'.Find ((=) 3))
+  printfn "// h\n> l1 <- l1.ConcatWith l1'"
+  l1 <- l1.ConcatWith l1'
   printfn "l1 = %A\n" l1
+
+  printfn "29. Реализация интерфейса списка на массиве:"
+  let mutable l2 = CListAdt<int>(3) :> ICList<int>;
+  printfn "l2 = %A" l2
+  printfn "// a\n> AddHead 1"
+  l2 <- l2.AddHead 1
+  printfn "l2 = %A\n// b\n> AddTail 4" l2
+  l2 <- l2.AddTail 4
+  printfn "l2 = %A\n// c\n> AddBefore 2 1" l2
+  l2 <- l2.AddBefore 2 1
+  printfn "l2 = %A\n> AddBefore 0 0" l2
+  l2 <- l2.AddBefore 0 0
+  printfn "l2 = %A\n> AddTail 5" l2
+  l2 <- l2.AddTail 5
+  printfn "l2 = %A\n// d\n> RemoveHead()" l2
+  l2 <- l2.RemoveHead()
+  printfn "l2 = %A\n// e\n> RemoveTail()" l2
+  l2 <- l2.RemoveTail()
+  printfn "l2 = %A\n// f\n> RemoveAt 1" l2
+  l2 <- l2.RemoveAt 1
+  printfn "l2 = %A\n> let mutable l2' = l2.RemoveAt 2" l2
+  let mutable l2' = l2.RemoveAt 2
+  printfn "l2' = %A" l2'
+  printfn "// g\n> l2'.Find ((=) 3)\n%A"  (l2'.Find ((=) 3))
+  printfn "// h\n> l2 <- l2.ConcatWith l2'"
+  l2 <- l2.ConcatWith l2'
+  printfn "l2 = %A\n" l2
 
   0
