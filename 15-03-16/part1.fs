@@ -3,6 +3,15 @@
 // Расчётное время выполнения: 3 часа
 // Действительное время выполнения: 5 часов
 
+// Задача 31 от 23 марта
+// Расчётное время выполнения: 1 час
+// Действительное время выполнения: 1,25 часа
+
+module Spbu
+
+open NUnit.Framework
+open FsUnit
+
 // 20. Интерфейс ориентированного графа, пригодный для решения дальнейших задач
 type IGraph<'V> =
   interface
@@ -108,7 +117,7 @@ let spreadOut (graph : IGraph<'V>) v =
         dfs i
     else ()
   dfs v
-  List.map graph.GetValue (List.filter (Array.get visited) [0 .. (s-1)])
+  List.map graph.GetValue (List.filter (Array.get visited) [0 .. (s-1)]) |> List.sort
 
 // 24. По вершине вернуть список вершин, из которых она доступна
 let spreadIn (graph : IGraph<'V>) v =
@@ -131,13 +140,86 @@ let spreadIn (graph : IGraph<'V>) v =
 type IMarkedGraph<'V, 'M> =
   interface
     inherit IGraph<'V>
-    // метод HasEdge из IGraph здесь будет принимать в качестве аргументов
-    // индексы проверяемых вершин, а HasEdgeByVal - "названия" вершин
 
     abstract HasEdgeByVal  : 'V -> 'V -> bool
 
     abstract GetMark  : 'V -> 'V -> 'M
   end
+
+// 31. Unit-тесты для задач 23, 24
+// Граф, используемый для тестов:
+let graphMap =
+    "1 --> 2 --> 3     7\n" +
+    "      |     |     |\n" +
+    "      |     |     |\n" +
+    "      v     |     v\n" +
+    "5 --> 4     |     8\n" +
+    "|     ^     |     |\n" +
+    "|     |     |     |\n" +
+    "|     |     |     v\n" +
+    "+---> 6 <---+     9"
+
+[<TestFixture>]
+type ``Тест графа с матрицей смежности`` () =  
+  let g =
+    new AdjMatrixGraph<int>([|1; 2; 3; 4; 5; 6; 7; 8; 9|],
+      [(0, 1); (1, 2); (1, 3); (4, 3); (4, 5); (5, 3); (2, 5); (6, 7); (7, 8)])
+        :> IGraph<int>
+  [<Test>] member this.
+    ``Из вершины 1 можно попасть в 1, 2, 3, 4, 6`` () =
+      (sprintf "%A" (spreadOut g 0))
+        |> should equal "[1; 2; 3; 4; 6]"
+  [<Test>] member this.
+    ``Из вершины 4 можно попасть в 4`` () =
+      (sprintf "%A" (spreadOut g 3))
+        |> should equal "[4]"
+  [<Test>] member this.
+    ``Из вершины 8 можно попасть в 8, 9`` () =
+      (sprintf "%A" (spreadOut g 7))
+        |> should equal "[8; 9]"  
+  [<Test>] member this.
+    ``В вершину 4 можно попасть из 1, 2, 3, 4, 5, 6`` () =
+      (sprintf "%A" (spreadIn g 3))
+        |> should equal "[1; 2; 3; 4; 5; 6]"  
+  [<Test>] member this.
+    ``В вершину 7 можно попасть из 7`` () =
+      (sprintf "%A" (spreadIn g 6))
+        |> should equal "[7]"
+  [<Test>] member this.
+    ``В вершину 8 можно попасть из 7, 8`` () =
+      (sprintf "%A" (spreadIn g 7))
+        |> should equal "[7; 8]"
+
+[<TestFixture>]
+type ``Тест графа со списком смежности`` () =  
+  let g =
+    new AdjListGraph<int>([|1; 2; 3; 4; 5; 6; 7; 8; 9|],
+      [(0, 1); (1, 2); (1, 3); (4, 3); (4, 5); (5, 3); (2, 5); (6, 7); (7, 8)])
+        :> IGraph<int>
+  [<Test>] member this.
+    ``Из вершины 1 можно попасть в 1, 2, 3, 4, 6`` () =
+      (sprintf "%A" (spreadOut g 0))
+        |> should equal "[1; 2; 3; 4; 6]"
+  [<Test>] member this.
+    ``Из вершины 4 можно попасть в 4`` () =
+      (sprintf "%A" (spreadOut g 3))
+        |> should equal "[4]"
+  [<Test>] member this.
+    ``Из вершины 8 можно попасть в 8, 9`` () =
+      (sprintf "%A" (spreadOut g 7))
+        |> should equal "[8; 9]"  
+  [<Test>] member this.
+    ``В вершину 4 можно попасть из 1, 2, 3, 4, 5, 6`` () =
+      (sprintf "%A" (spreadIn g 3))
+        |> should equal "[1; 2; 3; 4; 5; 6]"  
+  [<Test>] member this.
+    ``В вершину 7 можно попасть из 7`` () =
+      (sprintf "%A" (spreadIn g 6))
+        |> should equal "[7]"
+  [<Test>] member this.
+    ``В вершину 8 можно попасть из 7, 8`` () =
+      (sprintf "%A" (spreadIn g 7))
+        |> should equal "[7; 8]"
 
 [<EntryPoint>]
 let main argv =
@@ -152,7 +234,7 @@ let main argv =
   printfn "\n22. Граф со списками смежности:"
   (g2 :> IGraph<char>).Print()
   printfn "\n23. Cписок вершин, доступных из вершины А второго графа:\n%A"
-    (spreadOut g2 0)
+    ((spreadOut g2 0).ToString())
   printfn "\n24. Cписок вершин, из которых доступна из вершина А второго графа:\n%A"
     (spreadIn g2 0)
   0
