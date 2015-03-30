@@ -7,6 +7,8 @@
 // Расчётное время выполнения: 1 час
 // Действительное время выполнения: 1,25 часа
 
+// Исправления от 30 марта: больше графов, нет лишней сортировки, TestCase
+
 module Spbu
 
 open NUnit.Framework
@@ -117,7 +119,7 @@ let spreadOut (graph : IGraph<'V>) v =
         dfs i
     else ()
   dfs v
-  List.map graph.GetValue (List.filter (Array.get visited) [0 .. (s-1)]) |> List.sort
+  List.map graph.GetValue (List.filter (Array.get visited) [0 .. (s-1)])
 
 // 24. По вершине вернуть список вершин, из которых она доступна
 let spreadIn (graph : IGraph<'V>) v =
@@ -147,79 +149,87 @@ type IMarkedGraph<'V, 'M> =
   end
 
 // 31. Unit-тесты для задач 23, 24
-// Граф, используемый для тестов:
-let graphMap =
-    "1 --> 2 --> 3     7\n" +
-    "      |     |     |\n" +
-    "      |     |     |\n" +
-    "      v     |     v\n" +
-    "5 --> 4     |     8\n" +
-    "|     ^     |     |\n" +
-    "|     |     |     |\n" +
-    "|     |     |     v\n" +
-    "+---> 6 <---+     9"
+// Графы, используемые для тестов:
+let graphMap1 = // просто граф
+  "1 --> 2 --> 3     7\n" +
+  "      |     |     |\n" +
+  "      |     |     |\n" +
+  "      v     |     v\n" +
+  "5 --> 4     |     8\n" +
+  "|     ^     |     |\n" +
+  "|     |     |     |\n" +
+  "|     |     |     v\n" +
+  "+---> 6 <---+     9"
+let graphMap2 = // вырожденный граф из одинокой вершины
+  "0"
+let graphMap3 = // граф из двух вершин
+  "0 --> 1"
 
 [<TestFixture>]
 type ``Тест графа с матрицей смежности`` () =  
-  let g =
+  let g1 =
     new AdjMatrixGraph<int>([|1; 2; 3; 4; 5; 6; 7; 8; 9|],
       [(0, 1); (1, 2); (1, 3); (4, 3); (4, 5); (5, 3); (2, 5); (6, 7); (7, 8)])
         :> IGraph<int>
-  [<Test>] member this.
-    ``Из вершины 1 можно попасть в 1, 2, 3, 4, 6`` () =
-      (sprintf "%A" (spreadOut g 0))
-        |> should equal "[1; 2; 3; 4; 6]"
-  [<Test>] member this.
-    ``Из вершины 4 можно попасть в 4`` () =
-      (sprintf "%A" (spreadOut g 3))
-        |> should equal "[4]"
-  [<Test>] member this.
-    ``Из вершины 8 можно попасть в 8, 9`` () =
-      (sprintf "%A" (spreadOut g 7))
-        |> should equal "[8; 9]"  
-  [<Test>] member this.
-    ``В вершину 4 можно попасть из 1, 2, 3, 4, 5, 6`` () =
-      (sprintf "%A" (spreadIn g 3))
-        |> should equal "[1; 2; 3; 4; 5; 6]"  
-  [<Test>] member this.
-    ``В вершину 7 можно попасть из 7`` () =
-      (sprintf "%A" (spreadIn g 6))
-        |> should equal "[7]"
-  [<Test>] member this.
-    ``В вершину 8 можно попасть из 7, 8`` () =
-      (sprintf "%A" (spreadIn g 7))
-        |> should equal "[7; 8]"
+  let g2 = new AdjMatrixGraph<int>([| 0 |], []) :> IGraph<int>
+  let g3 = new AdjMatrixGraph<int>([| 0; 1 |], [(0, 1)]) :> IGraph<int>
+  [<TestCase (0, Result = "[1; 2; 3; 4; 6]")>]
+  [<TestCase (3, Result = "[4]")>]
+  [<TestCase (7, Result = "[8; 9]")>]
+  member this.``1. Доступные вершины из данной`` index =
+      (sprintf "%A" (spreadOut g1 index |> List.sort))
+  [<TestCase (3, Result = "[1; 2; 3; 4; 5; 6]")>]
+  [<TestCase (6, Result = "[7]")>]
+  [<TestCase (7, Result = "[7; 8]")>]
+  member this.``1. Из каких вершин доступна данная`` index =
+      (sprintf "%A" (spreadIn g1 index))
+  [<TestCase (0, Result = "[0]")>]
+  member this.``2. Доступные вершины из данной`` index =
+      (sprintf "%A" (spreadOut g2 index))
+  [<TestCase (0, Result = "[0]")>]
+  member this.``2. Из каких вершин доступна данная`` index =
+      (sprintf "%A" (spreadIn g2 index))
+  [<TestCase (0, Result = "[0; 1]")>]
+  [<TestCase (1, Result = "[1]")>]
+  member this.``3. Доступные вершины из данной`` index =
+      (sprintf "%A" (spreadOut g3 index))
+  [<TestCase (0, Result = "[0]")>]
+  [<TestCase (1, Result = "[0; 1]")>]
+  member this.``3. Из каких вершин доступна данная`` index =
+      (sprintf "%A" (spreadIn g3 index))
 
 [<TestFixture>]
 type ``Тест графа со списком смежности`` () =  
-  let g =
+  let g1 =
     new AdjListGraph<int>([|1; 2; 3; 4; 5; 6; 7; 8; 9|],
       [(0, 1); (1, 2); (1, 3); (4, 3); (4, 5); (5, 3); (2, 5); (6, 7); (7, 8)])
         :> IGraph<int>
-  [<Test>] member this.
-    ``Из вершины 1 можно попасть в 1, 2, 3, 4, 6`` () =
-      (sprintf "%A" (spreadOut g 0))
-        |> should equal "[1; 2; 3; 4; 6]"
-  [<Test>] member this.
-    ``Из вершины 4 можно попасть в 4`` () =
-      (sprintf "%A" (spreadOut g 3))
-        |> should equal "[4]"
-  [<Test>] member this.
-    ``Из вершины 8 можно попасть в 8, 9`` () =
-      (sprintf "%A" (spreadOut g 7))
-        |> should equal "[8; 9]"  
-  [<Test>] member this.
-    ``В вершину 4 можно попасть из 1, 2, 3, 4, 5, 6`` () =
-      (sprintf "%A" (spreadIn g 3))
-        |> should equal "[1; 2; 3; 4; 5; 6]"  
-  [<Test>] member this.
-    ``В вершину 7 можно попасть из 7`` () =
-      (sprintf "%A" (spreadIn g 6))
-        |> should equal "[7]"
-  [<Test>] member this.
-    ``В вершину 8 можно попасть из 7, 8`` () =
-      (sprintf "%A" (spreadIn g 7))
-        |> should equal "[7; 8]"
+  let g2 = new AdjListGraph<int>([| 0 |], []) :> IGraph<int>
+  let g3 = new AdjListGraph<int>([| 0; 1 |], [(0, 1)]) :> IGraph<int>
+  [<TestCase (0, Result = "[1; 2; 3; 4; 6]")>]
+  [<TestCase (3, Result = "[4]")>]
+  [<TestCase (7, Result = "[8; 9]")>]
+  member this.``1. Доступные вершины из данной`` index =
+      (sprintf "%A" (spreadOut g1 index |> List.sort))
+  [<TestCase (3, Result = "[1; 2; 3; 4; 5; 6]")>]
+  [<TestCase (6, Result = "[7]")>]
+  [<TestCase (7, Result = "[7; 8]")>]
+  member this.``1. Из каких вершин доступна данная`` index =
+      (sprintf "%A" (spreadIn g1 index))
+  [<TestCase (0, Result = "[0]")>]
+  member this.``2. Доступные вершины из данной`` index =
+      (sprintf "%A" (spreadOut g2 index))
+  [<TestCase (0, Result = "[0]")>]
+  member this.``2. Из каких вершин доступна данная`` index =
+      (sprintf "%A" (spreadIn g2 index))
+  [<TestCase (0, Result = "[0; 1]")>]
+  [<TestCase (1, Result = "[1]")>]
+  member this.``3. Доступные вершины из данной`` index =
+      (sprintf "%A" (spreadOut g3 index))
+  [<TestCase (0, Result = "[0]")>]
+  [<TestCase (1, Result = "[0; 1]")>]
+  member this.``3. Из каких вершин доступна данная`` index =
+      (sprintf "%A" (spreadIn g3 index))
 
 [<EntryPoint>]
 let main argv =

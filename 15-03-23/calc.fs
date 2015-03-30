@@ -3,6 +3,8 @@
 // Расчётное время выполнения: 5 часов
 // Действительное время выполнения: 7 часов
 
+// Исправления от 30 марта: TestCase
+
 // корректным представлением отрицательного числа во входе считается "(-V)"
 // названия переменных могут содержать только латинские буквы нижнего регистра
 
@@ -206,45 +208,31 @@ let calc str = (calc2 [] str)
 // ------------------------------------------------------------------------------------
 // Тесты
 
-[<Test>]
-let test01 () =
-  calc "3+ 7 *(1 -5) ^2 ^ 3 / 1024"
-  |> should equal "451"
+[<TestCase ("3+ 7 *(1 -5) ^2 ^ 3 / 1024", Result = "451")>]
+[<TestCase ("1 + (2 / 3) ^2", Result = "1")>] // из условия
+[<TestCase ("(4^(5 % 3) + (-68)) / ((-6)* (-2))", Result = "-4")>]
+let test35 str =
+  calc str
 
-[<Test>]
-let test02 () =
-  calc "1 + (2 / 3) ^2" // из условия
-  |> should equal "1"
+[<TestCase ("(4^(5 % 3) + (-68)) / (-6 * (-2))", "LexicalError")>]
+[<TestCase ("(6 + 7", "SyntaxError")>]
+[<TestCase ("(-42) / 0", "RuntimeError")>]
+let test35Fail str msg =
+  calc str |> should startWith msg
 
+// здесь тестируется со словарём, поэтому объединить не получится
 [<Test>]
-let test03 () =
-  calc "(4^(5 % 3) + (-68)) / ((-6)* (-2))"
-  |> should equal "-4"
-
-[<Test>]
-let testFail01 () =
-  calc "(4^(5 % 3) + (-68)) / (-6 * (-2))"
-  |> should startWith "LexicalError"
-
-[<Test>]
-let testFail02 () =
-  calc "(6 + 7"
-  |> should startWith "SyntaxError"
-
-[<Test>]
-let testFail03 () =
-  calc "(-42) / 0"
-  |> should startWith "RuntimeError"
-
-[<Test>]
-let testDict01 () =
+let test36_01 () =
   (calc2 [ ("a", 3) ] "1 + (2 / a) ^2")
   |> should equal "1"
-
 [<Test>]
-let testDict02 () =
+let test36_02 () =
   (calc2 [ ("lol", -68); ("three", 3) ] "(4^(5 % three) + lol) / ((-6)* (-2))")
   |> should equal "-4"
+[<Test>]
+let test36_03 () =
+  (calc2 [ ("three", 3) ] "(4^(5 % three) + lol) / ((-6)* (-2))")
+  |> should startWith "LexicalError"
 
 // --------------------------------------------------------------------------------------
 // далее идут не слишком содержательные тесты,
