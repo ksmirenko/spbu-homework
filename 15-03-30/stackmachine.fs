@@ -133,12 +133,18 @@ let toPostfix stream =
   List.rev (f stream ([], []))
 
 // вычислительная часть задания 37
+// одна операция
 [<TestCase ("1 + 2", Result = "1\n2\n+\n")>]
+// несколько операций, скобки
 [<TestCase ("7 * (6 + 5)", Result = "7\n6\n5\n+\n*\n")>]
+// тесты всех операций, скобок, пробелов и ассоц-ти ^
 [<TestCase ("3+ 7 *(1 -5) ^2 ^ 3 / 1024",
   Result = "3\n7\n1\n5\n-\n2\n3\n^\n^\n*\n1024\n/\n+\n")>]
 [<TestCase ("(4^(5 % 3) + (-68)) / ((-6)* (-2))",
   Result = "4\n5\n3\n%\n^\n-68\n+\n-6\n-2\n*\n/\n")>]
+// тесты ассоциативности
+[<TestCase ("1 - 2 - 3", Result = "1\n2\n-\n3\n-\n")>]
+[<TestCase ("3 ^ 1 ^ 2", Result = "3\n1\n2\n^\n^\n")>]
 let toVerticalPostfix (expr : string) =
   try
     let pt t =
@@ -209,15 +215,18 @@ let task38 (fin : string) =
     let input = streamIn.ReadToEnd ()
     input.Split([|'\n'|]) |> Array.toList |> processCommands
   with
-  | ex -> sprintf "I/O error!\n%A" ex
+  | ex -> sprintf "I/O error! %A" (ex.GetType().ToString())
 
 // ------------------------------------------------------------------------------------
 // проверка работы с файлами
 [<TestCase ("test37.in.txt", "test.out", Result = "7\n6\n5\n+\n*\n")>]
 let testFiles37 (fin : string) (fout : string) =
-  task37 fin fout
-  use stream = new StreamReader(fout)
-  stream.ReadToEnd()
+  try
+    task37 fin fout
+    use stream = new StreamReader(fout)
+    stream.ReadToEnd()
+  with
+  | ex -> ex.Message
 
 [<TestCase ("-42", Result = "-42")>]
 [<TestCase ("1\n2\n+\n", Result = "3")>]
@@ -240,4 +249,4 @@ let testErrors38 (str : string) =
 
 [<EntryPoint>]
 let main argv =
-  0
+  0  
