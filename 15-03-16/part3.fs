@@ -1,9 +1,14 @@
-﻿// Задачи 27-29 от 16 марта
+﻿// Задачи 27-29 от 16 марта (исправленная версия)
 // Автор: Кирилл Смиренко, группа 171
 // Расчётное время выполнения: 2 часа
 // Действительное время выполнения: 3 часа
 
-// Исправленная версия: методы теперь возвращают bool или unit
+// Задачи 33-34 от 23 марта
+// Расчётное время выполнения: 2 часа
+// Действительное время выполнения: 1,33 часа
+
+open NUnit.Framework
+open FsUnit
 
 // 27. Интерфейс для полиморфного списка
 type ICList<'A when 'A : equality> =
@@ -88,6 +93,10 @@ type CListAdt<'A when 'A : equality>(h : Node<'A>, s : int) =
       member this.RemoveTail () =
         if length = 0 then
           false
+        elif length = 1 then
+          head <- Empty
+          length <- 0
+          true
         else
           let rec rt n =
             match n with
@@ -101,11 +110,9 @@ type CListAdt<'A when 'A : equality>(h : Node<'A>, s : int) =
         if (i < 0) || (i >= length) then
           false
         elif i = 0 then
-          ignore ((this :> ICList<'A>).RemoveHead())
-          true
+          ((this :> ICList<'A>).RemoveHead())
         elif i = length - 1 then
-          ignore ((this :> ICList<'A>).RemoveTail())
-          true
+          ((this :> ICList<'A>).RemoveTail())
         else
           let rec ra n index =
             match n with
@@ -173,37 +180,54 @@ type CListArray<'A when 'A : equality>(arr : 'A []) =
       member this.AddTail v =
         array <- Array.append array (wrap v)
       member this.AddBefore v i =
-        if (i < 0) || (i >= length()) then
+        let l = length()
+        match i with
+        | i when (i < 0) || (i >= l) ->
           false
-        else
+        | 0 ->
+          array <- Array.append (wrap v) array
+          true
+        | _ ->
           array <-
             Array.append
               (Array.append (Array.sub array 0 i) (wrap v))
-                (Array.sub array i (length() - i + 1))
+                (Array.sub array i (l - i))
           true
       member this.RemoveHead () =
         match length() with
         | 0 -> false
+        | 1 ->
+          array <- Array.empty<'A>
+          true
         | _ ->
           array <- Array.sub array 1 (length() - 1)
           true
       member this.RemoveTail () =
         match length() with
         | 0 -> false
+        | 1 ->
+          array <- Array.empty<'A>
+          true
         | _ ->
           array <- Array.sub array 0 (length() - 1)
           true
       member this.RemoveAt i =
-        if (i < 0) || (i >= length()) then
+        let t = length() - 1
+        match i with
+        | i when (i < 0) || (i > t) ->
           false
-        else
-          match length() with
-          | 0 -> false
+        | 0 ->
+          ((this :> ICList<'A>).RemoveHead())
+        | i when (i < t) ->
+          match t with
+          | -1 -> false
           | _ ->
             array <-
-              Array.append (Array.sub array 0 (i - 1)) 
-                (Array.sub array i (length() - i))
+              Array.append (Array.sub array 0 i) 
+                (Array.sub array (i + 1) (t - i))
             true
+        | _ ->
+          ((this :> ICList<'A>).RemoveTail())
       member this.Find func =
         Array.tryFind func array
       member this.Append l =
@@ -214,8 +238,139 @@ type CListArray<'A when 'A : equality>(arr : 'A []) =
         array <- Array.append array (toArr l)
 
     override this.ToString() =
-      array.ToString()
+      (sprintf "%A" array).Replace('|', ' ')
   end
+
+// 33. Unit-тесты для реализаций интерфейса полиморфного списка на АТД
+[<TestFixture>]
+type ``Список на АТД`` () =
+    [<Test>]
+    member this.``AddHead`` () =
+      let l1 = CListAdt<int>(1) :> ICList<int>
+      l1.AddHead 0
+      l1.ToString() |> should equal "[ 0; 1 ]"
+    [<Test>]
+    member this.``AddTail`` () =
+      let l1 = CListAdt<int>() :> ICList<int>
+      l1.AddTail 4
+      l1.ToString() |> should equal "[ 4 ]"
+    [<Test>]
+    member this.``AddBefore (в начало, мимо, в середину)`` () =
+      let l1 = CListAdt<int>(1) :> ICList<int>
+      let r1 = l1.AddBefore 0 0
+      (r1, l1.ToString()) |> should equal (true, "[ 0; 1 ]")
+      let r2 = l1.AddBefore 5 5
+      (r2, l1.ToString()) |> should equal (false, "[ 0; 1 ]")
+      let r3 = l1.AddBefore 2 1
+      (r3, l1.ToString()) |> should equal (true, "[ 0; 2; 1 ]")
+    [<Test>]
+    member this.``RemoveHead (не из пустого, из пустого)`` () =
+      let l1 = CListAdt<int>(1) :> ICList<int>
+      let r1 = l1.RemoveHead()
+      (r1, l1.ToString()) |> should equal (true, "[ ]")
+      let r2 = l1.RemoveHead()
+      (r2, l1.ToString()) |> should equal (false, "[ ]")
+    [<Test>]
+    member this.``RemoveTail (не из пустого, из пустого)`` () =
+      let l1 = CListAdt<int>(1) :> ICList<int>
+      let r1 = l1.RemoveTail()
+      (r1, l1.ToString()) |> should equal (true, "[ ]")
+      let r2 = l1.RemoveTail()
+      (r2, l1.ToString()) |> should equal (false, "[ ]")
+    [<Test>]
+    member this.``RemoveAt (из начала, из середины, из конца, мимо)`` () =
+      let l1 = CListAdt<int>(4) :> ICList<int>
+      l1.AddHead 3
+      l1.AddHead 2
+      l1.AddHead 1
+      l1.AddHead 0
+      let r1 = l1.RemoveAt 0
+      (r1, l1.ToString()) |> should equal (true, "[ 1; 2; 3; 4 ]")
+      let r2 = l1.RemoveAt 3
+      (r2, l1.ToString()) |> should equal (true, "[ 1; 2; 3 ]")
+      let r3 = l1.RemoveAt 1
+      (r3, l1.ToString()) |> should equal (true, "[ 1; 3 ]")
+      let r4 = l1.RemoveAt 8
+      (r4, l1.ToString()) |> should equal (false, "[ 1; 3 ]")
+    [<Test>]
+    member this.``Find (нашел, не нашел)`` () =
+      let l1 = CListAdt<int>(4) :> ICList<int>
+      l1.AddHead 3
+      l1.AddHead -2
+      l1.Find ((<) 4) |> should equal None
+      l1.Find ((<) 0) |> should equal (Some 3)
+    [<Test>]
+    member this.``Append (с непустым, с пустым)`` () =
+      let l1 = CListAdt<int>(4) :> ICList<int>
+      l1.AddHead 3
+      l1.AddHead 2
+      let l2 = CListArray<int>([| -2; -1 |]) :> ICList<int>
+      l1.Append l2
+      l1.ToString() |> should equal "[ 2; 3; 4; -2; -1 ]"
+      l1.Append (CListAdt<int>())
+      l1.ToString() |> should equal "[ 2; 3; 4; -2; -1 ]"
+
+// 34. Unit-тесты для реализаций интерфейса полиморфного списка на массиве
+[<TestFixture>]
+type ``Список на массиве`` () =
+    [<Test>]
+    member this.``AddHead`` () =
+      let l1 = CListArray<int>(1) :> ICList<int>
+      l1.AddHead 0
+      l1.ToString() |> should equal "[ 0; 1 ]"
+    [<Test>]
+    member this.``AddTail`` () =
+      let l1 = CListArray<int>() :> ICList<int>
+      l1.AddTail 4
+      l1.ToString() |> should equal "[ 4 ]"
+    [<Test>]
+    member this.``AddBefore (в начало, мимо, в середину)`` () =
+      let l1 = CListArray<int>(1) :> ICList<int>
+      let r1 = l1.AddBefore 0 0
+      (r1, l1.ToString()) |> should equal (true, "[ 0; 1 ]")
+      let r2 = l1.AddBefore 5 5
+      (r2, l1.ToString()) |> should equal (false, "[ 0; 1 ]")
+      let r3 = l1.AddBefore 6 1
+      (r3, l1.ToString()) |> should equal (true, "[ 0; 6; 1 ]")
+    [<Test>]
+    member this.``RemoveHead (не из пустого, из пустого)`` () =
+      let l1 = CListArray<int>(1) :> ICList<int>
+      let r1 = l1.RemoveHead()
+      (r1, l1.ToString()) |> should equal (true, "[  ]")
+      let r2 = l1.RemoveHead()
+      (r2, l1.ToString()) |> should equal (false, "[  ]")
+    [<Test>]
+    member this.``RemoveTail (не из пустого, из пустого)`` () =
+      let l1 = CListArray<int>(1) :> ICList<int>
+      let r1 = l1.RemoveTail()
+      (r1, l1.ToString()) |> should equal (true, "[  ]")
+      let r2 = l1.RemoveTail()
+      (r2, l1.ToString()) |> should equal (false, "[  ]")
+    [<Test>]
+    member this.``RemoveAt (из начала, из середины, из конца, мимо)`` () =
+      let l1 = CListArray<int>([| 0; -1; -2; -3; -4 |]) :> ICList<int>
+      let r1 = l1.RemoveAt 0
+      (r1, l1.ToString()) |> should equal (true, "[ -1; -2; -3; -4 ]")
+      let r2 = l1.RemoveAt 1
+      (r2, l1.ToString()) |> should equal (true, "[ -1; -3; -4 ]")
+      let r3 = l1.RemoveAt 1
+      (r3, l1.ToString()) |> should equal (true, "[ -1; -4 ]")
+      let r4 = l1.RemoveAt 8
+      (r4, l1.ToString()) |> should equal (false, "[ -1; -4 ]")
+    [<Test>]
+    member this.``Find (нашел, не нашел)`` () =
+      let l1 = CListArray<int>([| -2; 3; 4 |]) :> ICList<int>
+      l1.Find ((<) 4) |> should equal None
+      l1.Find ((<) 0) |> should equal (Some 3)
+    [<Test>]
+    member this.``Append (с непустым, с пустым)`` () =
+      let l1 = CListArray<int>([| 2; 3; 4 |]) :> ICList<int>
+      let l2 = CListAdt<int>(-1) :> ICList<int>
+      l2.AddHead -2
+      l1.Append l2
+      l1.ToString() |> should equal "[ 2; 3; 4; -2; -1 ]"
+      l1.Append (CListArray<int>())
+      l1.ToString() |> should equal "[ 2; 3; 4; -2; -1 ]"
 
 [<EntryPoint>]
 let main argv =
@@ -253,8 +408,8 @@ let main argv =
   l2.AddHead 1
   printfn "l2 = %A\n// b\n> l2.AddTail 4" l2
   l2.AddTail 4
-  printfn "l2 = %A\n// c\n> l2.AddBefore 2 1" l2
-  ignore (l2.AddBefore 2 1)
+  printfn "l2 = %A\n// c\n> l2.AddBefore 6 1" l2
+  ignore (l2.AddBefore 6 1)
   printfn "l2 = %A\n> l2.AddBefore 0 0" l2
   ignore (l2.AddBefore 0 0)
   printfn "l2 = %A\n> l2.AddTail 5" l2

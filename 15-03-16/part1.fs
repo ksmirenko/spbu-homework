@@ -3,6 +3,17 @@
 // Расчётное время выполнения: 3 часа
 // Действительное время выполнения: 5 часов
 
+// Задача 31 от 23 марта
+// Расчётное время выполнения: 1 час
+// Действительное время выполнения: 1,25 часа
+
+// Исправления от 30 марта: больше графов, нет лишней сортировки, TestCase
+
+module Spbu
+
+open NUnit.Framework
+open FsUnit
+
 // 20. Интерфейс ориентированного графа, пригодный для решения дальнейших задач
 type IGraph<'V> =
   interface
@@ -131,13 +142,94 @@ let spreadIn (graph : IGraph<'V>) v =
 type IMarkedGraph<'V, 'M> =
   interface
     inherit IGraph<'V>
-    // метод HasEdge из IGraph здесь будет принимать в качестве аргументов
-    // индексы проверяемых вершин, а HasEdgeByVal - "названия" вершин
 
     abstract HasEdgeByVal  : 'V -> 'V -> bool
 
     abstract GetMark  : 'V -> 'V -> 'M
   end
+
+// 31. Unit-тесты для задач 23, 24
+// Графы, используемые для тестов:
+let graphMap1 = // просто граф
+  "1 --> 2 --> 3     7\n" +
+  "      |     |     |\n" +
+  "      |     |     |\n" +
+  "      v     |     v\n" +
+  "5 --> 4     |     8\n" +
+  "|     ^     |     |\n" +
+  "|     |     |     |\n" +
+  "|     |     |     v\n" +
+  "+---> 6 <---+     9"
+let graphMap2 = // вырожденный граф из одинокой вершины
+  "0"
+let graphMap3 = // граф из двух вершин
+  "0 --> 1"
+
+[<TestFixture>]
+type ``Тест графа с матрицей смежности`` () =  
+  let g1 =
+    new AdjMatrixGraph<int>([|1; 2; 3; 4; 5; 6; 7; 8; 9|],
+      [(0, 1); (1, 2); (1, 3); (4, 3); (4, 5); (5, 3); (2, 5); (6, 7); (7, 8)])
+        :> IGraph<int>
+  let g2 = new AdjMatrixGraph<int>([| 0 |], []) :> IGraph<int>
+  let g3 = new AdjMatrixGraph<int>([| 0; 1 |], [(0, 1)]) :> IGraph<int>
+  [<TestCase (0, Result = "[1; 2; 3; 4; 6]")>]
+  [<TestCase (3, Result = "[4]")>]
+  [<TestCase (7, Result = "[8; 9]")>]
+  member this.``1. Доступные вершины из данной`` index =
+      (sprintf "%A" (spreadOut g1 index |> List.sort))
+  [<TestCase (3, Result = "[1; 2; 3; 4; 5; 6]")>]
+  [<TestCase (6, Result = "[7]")>]
+  [<TestCase (7, Result = "[7; 8]")>]
+  member this.``1. Из каких вершин доступна данная`` index =
+      (sprintf "%A" (spreadIn g1 index))
+  [<TestCase (0, Result = "[0]")>]
+  member this.``2. Доступные вершины из данной`` index =
+      (sprintf "%A" (spreadOut g2 index))
+  [<TestCase (0, Result = "[0]")>]
+  member this.``2. Из каких вершин доступна данная`` index =
+      (sprintf "%A" (spreadIn g2 index))
+  [<TestCase (0, Result = "[0; 1]")>]
+  [<TestCase (1, Result = "[1]")>]
+  member this.``3. Доступные вершины из данной`` index =
+      (sprintf "%A" (spreadOut g3 index))
+  [<TestCase (0, Result = "[0]")>]
+  [<TestCase (1, Result = "[0; 1]")>]
+  member this.``3. Из каких вершин доступна данная`` index =
+      (sprintf "%A" (spreadIn g3 index))
+
+[<TestFixture>]
+type ``Тест графа со списком смежности`` () =  
+  let g1 =
+    new AdjListGraph<int>([|1; 2; 3; 4; 5; 6; 7; 8; 9|],
+      [(0, 1); (1, 2); (1, 3); (4, 3); (4, 5); (5, 3); (2, 5); (6, 7); (7, 8)])
+        :> IGraph<int>
+  let g2 = new AdjListGraph<int>([| 0 |], []) :> IGraph<int>
+  let g3 = new AdjListGraph<int>([| 0; 1 |], [(0, 1)]) :> IGraph<int>
+  [<TestCase (0, Result = "[1; 2; 3; 4; 6]")>]
+  [<TestCase (3, Result = "[4]")>]
+  [<TestCase (7, Result = "[8; 9]")>]
+  member this.``1. Доступные вершины из данной`` index =
+      (sprintf "%A" (spreadOut g1 index |> List.sort))
+  [<TestCase (3, Result = "[1; 2; 3; 4; 5; 6]")>]
+  [<TestCase (6, Result = "[7]")>]
+  [<TestCase (7, Result = "[7; 8]")>]
+  member this.``1. Из каких вершин доступна данная`` index =
+      (sprintf "%A" (spreadIn g1 index))
+  [<TestCase (0, Result = "[0]")>]
+  member this.``2. Доступные вершины из данной`` index =
+      (sprintf "%A" (spreadOut g2 index))
+  [<TestCase (0, Result = "[0]")>]
+  member this.``2. Из каких вершин доступна данная`` index =
+      (sprintf "%A" (spreadIn g2 index))
+  [<TestCase (0, Result = "[0; 1]")>]
+  [<TestCase (1, Result = "[1]")>]
+  member this.``3. Доступные вершины из данной`` index =
+      (sprintf "%A" (spreadOut g3 index))
+  [<TestCase (0, Result = "[0]")>]
+  [<TestCase (1, Result = "[0; 1]")>]
+  member this.``3. Из каких вершин доступна данная`` index =
+      (sprintf "%A" (spreadIn g3 index))
 
 [<EntryPoint>]
 let main argv =
@@ -152,7 +244,7 @@ let main argv =
   printfn "\n22. Граф со списками смежности:"
   (g2 :> IGraph<char>).Print()
   printfn "\n23. Cписок вершин, доступных из вершины А второго графа:\n%A"
-    (spreadOut g2 0)
+    ((spreadOut g2 0).ToString())
   printfn "\n24. Cписок вершин, из которых доступна из вершина А второго графа:\n%A"
     (spreadIn g2 0)
   0
