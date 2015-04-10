@@ -24,6 +24,11 @@ let parseContext (str : string) =
 // assign, while
 [<TestCase(";\n:=\nx\n3\nwhile\nx\n;\nwrite\nx\n:=\nx\n-\nx\n1",
   "", Result = "3\n2\n1\n")>]
+// multiple stmts in if
+[<TestCase("; read x if x ; write + x 1 write * x 2 write x",
+  "-5", Result = "-4\n-10\n")>]
+[<TestCase("; read x if x ; write + x 1 write * x 2 write x",
+  "0", Result = "0\n")>]
 // t.in (pow)
 [<TestCase(
   "; read x ; read n ; := res 1 ; while n ; := res * res x := n - n 1 write res",
@@ -40,7 +45,14 @@ let test code input =
   ignore (interpret code (new ListInputProvider(input |> parseContext)) op)
   op.GetString()
 
-// 
+// incorrect read
+[<TestCase("read + n 1", "5")>]
+// incomplete expr
+[<TestCase("write * 42 ^ 1", "")>]
+// incomplete stmt
+[<TestCase("if 5 := x 1", "")>]
+// div by zero
+[<TestCase("write / 1 0", "")>]
 let testErr code input =
   Assert.AreNotEqual(ErrNo,
     interpret code (new ListInputProvider(input |> parseContext))

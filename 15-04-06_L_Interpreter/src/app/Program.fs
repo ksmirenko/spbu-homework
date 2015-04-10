@@ -1,17 +1,8 @@
 ﻿module Program
 
-//open System
 open System.IO
 open IOProviders
 open Interpreter
-
-// TODO:
-//  ok IOProviders
-//  ok buildTree
-//  ok execute
-//  ok main (wrapper)
-//  * unit tests
-//  * FAKE
 
 [<EntryPoint>]
 let main argv = 

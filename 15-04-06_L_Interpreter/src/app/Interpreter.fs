@@ -118,14 +118,14 @@ let execute (inP : IInputProvider) (outP : IOutputProvider) (stmt : Stmt) =
       if (calcExpr expr scope) <> 0 then exec stT else exec stF
     | While(expr, st) ->
       while (calcExpr expr scope) <> 0 do exec st
+  exec stmt
+
+let interpret (code : string) (inP : IInputProvider) (outP : IOutputProvider) =
   try
-    exec stmt
+    code.Split(' ', '\n') |> Array.toList |> parseStmt |> fst |> (execute inP outP)
     ErrNo
   with
   | :? OverflowException -> ErrOverflow
   | :? DivideByZeroException -> ErrDivByZero
   | :? IOException' -> ErrIO
   | exc -> ErrUnknown(exc.Message)
-
-let interpret (code : string) (inP : IInputProvider) (outP : IOutputProvider) =
-  code.Split(' ', '\n') |> Array.toList |> parseStmt |> fst |> (execute inP outP)
