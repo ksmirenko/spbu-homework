@@ -1,11 +1,9 @@
-# input & output files
-*.out
-*.in
-
-# launch files
-*.l
-
-# test files
-*/tests/*.*
-*/tests_old/*.*
-14-12-03/tests
+# F Sharp
+**/packages
+**/bin
+**/obj
+**/build
+**/test
+Debug
+*.suo
+*.userprefs
