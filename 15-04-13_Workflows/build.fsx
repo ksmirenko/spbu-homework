@@ -1,25 +1,28 @@
-﻿#!packages/FAKE/tools/FAKE.exe
+#!packages/FAKE/tools/FAKE.exe
 #r @"packages/FAKE/tools/FakeLib.dll"
 open Fake
-open Fake.FscHelper
-
-RestorePackages()
 
 let buildDir = "./build/"
+let testDir  = "./test/"
 
 Target "Clean" (fun _ ->
-  CleanDirs [buildDir]
+  CleanDirs [buildDir; testDir]
 )
 
-Target "BuildAll" (fun _ ->
-  !! "src/**/*.fs"
-  |> Fsc (fun p ->
-           { p with Output = "program.dll"
-                    FscTarget = Library })
+Target "BuildApp" (fun _ ->
+  !! "src/app/**/*.fsproj"
+    |> MSBuildRelease buildDir "Build"
+    |> Log "AppBuild-Output: "
+)
+
+Target "BuildTest" (fun _ ->
+  !! "src/test/**/*.fsproj"
+    |> MSBuildDebug testDir "Build"
+    |> Log "BuildTest-Output: "
 )
 
 Target "Test" (fun _ ->
-  !! (buildDir + "/*.dll")
+  !! (testDir + "/*.dll")
     |> NUnit (fun p ->
         {p with
            DisableShadowCopy = true;
@@ -31,7 +34,8 @@ Target "Default" (fun _ ->
 )
 
 "Clean"
-  ==> "BuildAll"
+  ==> "BuildApp"
+  ==> "BuildTest"
   ==> "Test"
   ==> "Default"
 
