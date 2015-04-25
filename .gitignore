@@ -4,6 +4,8 @@
 **/obj
 **/build
 **/test
+!**/src/test
 Debug
 *.suo
 *.userprefs
+*~
