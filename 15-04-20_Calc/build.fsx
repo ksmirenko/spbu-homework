@@ -1,5 +1,5 @@
-#!tools/FAKE/tools/FAKE.exe
-#r @"tools/FAKE/tools/FakeLib.dll"
+#!packages/FAKE/tools/FAKE.exe
+#r @"packages /FAKE/tools/FakeLib.dll"
 open Fake
 
 RestorePackages()
