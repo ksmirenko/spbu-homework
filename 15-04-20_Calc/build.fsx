@@ -1,27 +1,20 @@
 #!packages/FAKE/tools/FAKE.exe
-#r @"packages /FAKE/tools/FakeLib.dll"
+#r @"packages/FAKE/tools/FakeLib.dll"
 open Fake
 
 RestorePackages()
 
 let buildDir = "./build/"
-let guiDir = "./gui/"
 let testDir  = "./test/"
 
 Target "Clean" (fun _ ->
-  CleanDirs [buildDir; guiDir; testDir]
+  CleanDirs [buildDir; testDir]
 )
 
 Target "BuildApp" (fun _ ->
   !! "src/calc/**/*.fsproj"
     |> MSBuildRelease buildDir "Build"
     |> Log "AppBuild-Output: "
-)
-
-Target "BuildGUI" (fun _ ->
-  !! "src/gui/**/*.csproj"
-    |> MSBuildRelease guiDir "Build"
-    |> Log "BuildGui-Output: "
 )
 
 Target "BuildTest" (fun _ ->
@@ -44,7 +37,6 @@ Target "Default" (fun _ ->
 
 "Clean"
   ==> "BuildApp"
-  ==> "BuildGui"
   ==> "BuildTest"
   ==> "Test"
   ==> "Default"
