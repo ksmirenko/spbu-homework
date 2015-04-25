@@ -16,7 +16,7 @@ type CalcTest() =
   [<TestCase ('*', Result = 8.0)>]
   [<TestCase ('/', Result = 0.5)>]
   [<TestCase ('^', Result = 16.0)>]
-  let testBasicOperations op =
+  member this.testBasicOperations op =
     c.Reset()
     c.DigitPressed ()
     c.Operation 2.0 op |> ignore
@@ -26,7 +26,7 @@ type CalcTest() =
     | _ -> 0.0
 
   [<Test>]
-  let testMultipleOperations () =
+  member this.testMultipleOperations () =
     c.Reset()
     c.DigitPressed ()
     c.Operation 6.5 '+' |> ignore
@@ -38,7 +38,7 @@ type CalcTest() =
     Assert.AreEqual(c.Calculate 8.0, Ok(9.5))
 
   [<Test>]
-  let testDivByZero () =
+  member this.testDivByZero () =
     c.Reset()
     c.DigitPressed ()
     c.Operation 1.0 '/' |> ignore
@@ -46,7 +46,7 @@ type CalcTest() =
     Assert.AreEqual(c.Calculate 0.0, DivByZero)
 
   [<Test>]
-  let testMemory () =
+  member this.testMemory () =
     c.Reset()
     c.Reset ()
     c.MemoryAdd 14.89
