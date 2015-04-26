@@ -56,7 +56,7 @@ type Calculator () =
 
     member this.Operation num newOp =
       match la with
-      | ADigit ->
+      | ADigit | ACalc ->
         match doOperation num oper with
         | true ->
           oper <- newOp

@@ -18,6 +18,12 @@ Target "BuildApp" (fun _ ->
     |> Log "AppBuild-Output: "
 )
 
+Target "BuildGui" (fun _ ->
+  !! "src/fgui/**/*.fsproj"
+    |> MSBuildRelease buildDir "Build"
+    |> Log "AppBuild-Output: "
+)
+
 Target "BuildTest" (fun _ ->
   !! "src/test/**/*.fsproj"
     |> MSBuildDebug testDir "Build"
@@ -38,6 +44,7 @@ Target "Default" (fun _ ->
 
 "Clean"
   ==> "BuildApp"
+  ==> "BuildGui"
   ==> "BuildTest"
   ==> "Test"
   ==> "Default"

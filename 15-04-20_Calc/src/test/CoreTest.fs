@@ -3,10 +3,6 @@
 open NUnit.Framework
 open calc
 
-// Поскольку всё содержательное находится именно в calc,
-// а Unit-тестирование WPF-гуя дело тёмное,
-// Unit-тесты написаны для логики.
-
 [<TestFixture>]
 type CalcTest() =
   let c = new Calculator ()
