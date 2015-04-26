@@ -55,8 +55,6 @@
     <Reference Include="mscorlib" />
     <Reference Include="nunit.framework">
       <HintPath>..\..\packages\NUnit.2.6.4\lib\nunit.framework.dll</HintPath>
-      <Private>True</Private>
-      <Package>nunit</Package>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

@@ -9,3 +9,4 @@ Debug
 *.suo
 *.userprefs
 *~
+**/NuGet.exe
