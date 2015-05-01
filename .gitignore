@@ -4,6 +4,9 @@
 **/obj
 **/build
 **/test
+!**/src/test
 Debug
 *.suo
 *.userprefs
+*~
+**/NuGet.exe
