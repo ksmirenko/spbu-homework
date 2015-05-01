@@ -1,0 +1,48 @@
+Testing Maximum:
+
+10^4 elems:
+Time: 0.2985    No threading:   10000
+Time: 2.3803    1 threads:      10000
+Time: 0.3109    2 threads:      10000
+Time: 0.422     4 threads:      10000
+Time: 0.7248    8 threads:      10000
+Time: 0.9656    10 threads:     10000
+
+10^7 elems:
+Time: 26.8711   No threading:   10000000
+Time: 29.7223   1 threads:      10000000
+Time: 15.0029   2 threads:      10000000
+Time: 8.142     4 threads:      10000000
+Time: 7.3633    8 threads:      10000000
+Time: 8.2105    10 threads:     10000000
+
+10^7 elems backwards:
+Time: 25.107    No threading:   10000000
+Time: 32.0743   1 threads:      10000000
+Time: 16.557    2 threads:      10000000
+Time: 10.6947   4 threads:      10000000
+Time: 9.239     8 threads:      10000000
+Time: 8.3473    10 threads:     10000000
+
+Testing Definite Integral
+
+Int y=x (0 .. 10), eps=1e-5             Ans = 50.0
+Time: 74.9602   1 threads:      50.0
+Time: 37.0368   2 threads:      50.0
+Time: 24.2299   4 threads:      49.999975
+Time: 13.3363   8 threads:      49.9999375
+Time: 16.6378   10 threads:     49.99991
+
+Int y=cos(x)+2 (0 .. 10), eps=1e-5       Ans = 19.456
+Time: 156.4012  1 threads:      19.45597889
+Time: 78.4944   2 threads:      19.45597889
+Time: 42.4667   4 threads:      19.4559669
+Time: 29.2553   8 threads:      19.45595511
+Time: 32.1573   10 threads:     19.45593949
+
+Int y=sin(x)+2 (0 .. 56), eps=1e-5       Ans = 112.1468
+Time: 758.3855  1 threads:      112.1467651
+Time: 436.5228  2 threads:      112.1467651
+Time: 235.8732  4 threads:      112.1467543
+Time: 151.5221  8 threads:      112.1467281
+Time: 161.2905  10 threads:     112.1466583
